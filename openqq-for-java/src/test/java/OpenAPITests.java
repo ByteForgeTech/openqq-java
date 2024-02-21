@@ -1,11 +1,11 @@
-import com.illtamer.openqq.http.OpenAPI;
-import com.illtamer.openqq.http.entity.AccessToken;
-import com.illtamer.openqq.model.Certificate;
-import com.illtamer.openqq.ws.QQConnection;
-import com.illtamer.openqq.ws.handler.ChainHandler;
-import com.illtamer.openqq.ws.handler.ErrorCheckHandler;
-import com.illtamer.openqq.ws.handler.EventParseHandler;
-import com.illtamer.openqq.ws.handler.HeartbeatHandler;
+import cn.byteforge.openqq.http.OpenAPI;
+import cn.byteforge.openqq.http.entity.AccessToken;
+import cn.byteforge.openqq.model.Certificate;
+import cn.byteforge.openqq.ws.QQConnection;
+import cn.byteforge.openqq.ws.handler.ChainHandler;
+import cn.byteforge.openqq.ws.handler.ErrorCheckHandler;
+import cn.byteforge.openqq.ws.handler.EventParseHandler;
+import cn.byteforge.openqq.ws.handler.HeartbeatHandler;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 

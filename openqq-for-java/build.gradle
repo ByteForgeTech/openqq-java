@@ -2,10 +2,11 @@ plugins {
     id 'java'
 }
 
-group 'com.illtamer.openqq.protocol'
-version '1.0-SNAPSHOT'
+group 'cn.byteforge.openqq'
+version '1.0.0-SNAPSHOT'
 
 repositories {
+    mavenLocal()
     mavenCentral()
 }
 
