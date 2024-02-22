@@ -2,10 +2,11 @@ import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.AccessToken;
 import cn.byteforge.openqq.model.Certificate;
 import cn.byteforge.openqq.ws.QQConnection;
-import cn.byteforge.openqq.ws.handler.ChainHandler;
-import cn.byteforge.openqq.ws.handler.ErrorCheckHandler;
-import cn.byteforge.openqq.ws.handler.EventParseHandler;
-import cn.byteforge.openqq.ws.handler.HeartbeatHandler;
+import cn.byteforge.openqq.ws.WebSocketAPI;
+import cn.byteforge.openqq.ws.entity.BotContext;
+import cn.byteforge.openqq.ws.entity.Session;
+import cn.byteforge.openqq.ws.entity.Shard;
+import cn.byteforge.openqq.ws.handler.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ public class OpenAPITests {
 
     private static Certificate certificate;
 
-    @BeforeAll
+//    @BeforeAll
     static void setup() throws IOException {
         String appId = new String(Files.readAllBytes(Paths.get("../secrets/appId.txt")));
         String clientSecret = new String(Files.readAllBytes(Paths.get("../secrets/clientSecret.txt")));
@@ -26,23 +27,39 @@ public class OpenAPITests {
     }
 
     @Test
+    void testFind() {
+        ChainHandler chainHandler = ChainHandler.builder()
+                .append(new ErrorCheckHandler())
+                .append(new EventParseHandler())
+                .append(new HeartbeatHandler())
+//                .next(new SequenceHandler())
+                .append(new APICallbackHandler()).build();
+        System.out.println(chainHandler.find(EventParseHandler.class));
+    }
+
+    @Test
     void testGetUniversalWssUrl() throws Exception {
+        int intents = 513;
         String wssUrl = OpenAPI.getUniversalWssUrl(certificate);
-//        ChainContext context = new ChainContext();
-        ChainHandler checkHandler = new ErrorCheckHandler()
-                .next(new EventParseHandler())
-                .next(new HeartbeatHandler())
-//                .next(new APICallbackHandler())
-                .next(new ChainHandler() {
+        ChainHandler chainHandler = ChainHandler.builder()
+                .append(new ErrorCheckHandler())
+                .append(new EventParseHandler())
+                .append(new HeartbeatHandler())
+//                .next(new SequenceHandler())
+                .append(new APICallbackHandler())
+                .append(new ChainHandler() {
                     // Event ->
                     @Override
                     protected Object doHandle(Object o) {
                         System.out.println(o);
                         return null;
                     }
-                });
-        QQConnection.connect(wssUrl, checkHandler, (id) -> {
-            ;
+                }).build();
+        BotContext context = BotContext.create(certificate, chainHandler);
+        QQConnection.connect(wssUrl, context, (id) -> {
+
+            Session session = WebSocketAPI.getSession(intents, Shard.STANDALONE, null, context);
+
         });
     }
 

@@ -1,5 +1,6 @@
 package cn.byteforge.openqq.ws;
 
+import cn.byteforge.openqq.ws.entity.BotContext;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -37,11 +38,11 @@ public class QQConnection {
 
     /**
      * @param url websocket链接
-     * @param chainHandler 返回结果链式处理
+     * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 ChannelId
      * */
-    public static void connect(String url, ChainHandler chainHandler, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
-        EventChannelHandler eventHandler = new EventChannelHandler(chainHandler);
+    public static void connect(String url, BotContext context, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
+        EventChannelHandler eventHandler = new EventChannelHandler(context.getChainHandler());
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap bootstrap = new Bootstrap()
@@ -76,6 +77,7 @@ public class QQConnection {
             // block until handshake success
             eventHandler.getHandshakeFuture().sync();
             CLIENT_GROUPS.add(channel);
+            context.bind(channel.id());
             if (callback != null) callback.accept(channel.id());
             channel.closeFuture().sync();
         } catch (URISyntaxException e) {
