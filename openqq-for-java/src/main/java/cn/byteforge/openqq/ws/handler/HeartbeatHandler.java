@@ -35,9 +35,11 @@ public class HeartbeatHandler extends ChainHandler {
                 }
                 // start to heartbeat
                 long interval = event.getData().get("heartbeat_interval").getAsLong();
-                interval -= (interval / 10) * 2;
-                scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(), 0L, interval, TimeUnit.MILLISECONDS);
-                log.info("Heartbeat thread start");
+                // ScheduledExecutor leaves 20% of the interval to avoid errors
+//                interval -= (interval / 10) * 2;
+                interval = 1000;
+                scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getContext()), interval, interval, TimeUnit.MILLISECONDS);
+                log.debug("Heartbeat thread start");
                 return null;
             }
             case HEARTBEAT: {
