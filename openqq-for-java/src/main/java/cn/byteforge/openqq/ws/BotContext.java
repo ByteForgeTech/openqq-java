@@ -1,4 +1,4 @@
-package cn.byteforge.openqq.ws.entity;
+package cn.byteforge.openqq.ws;
 
 import cn.byteforge.openqq.model.Certificate;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
@@ -8,6 +8,8 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+
+import java.util.ConcurrentModificationException;
 
 /**
  * Bot 上下文
@@ -30,11 +32,22 @@ public class BotContext {
     private ChannelId channelId;
 
     /**
+     * 接收到的消息序号
+     * */
+    private Long receivedSerialNumber;
+
+    /**
+     * 处理到的消息序号
+     * */
+    private Long handledSerialNumber;
+
+    /**
      * 将链接绑定机器人上下文
      * */
-    public void bind(ChannelId channelId) {
-        Assert.isNull(channelId, "BotContext with channel-%s is repeatedly bound to channel-id%s", this.channelId.asLongText(), channelId.asLongText());
-        this.channelId = channelId;
+    protected void bind(ChannelId id) {
+        if (channelId != null)
+            throw new ConcurrentModificationException(String.format("BotContext with channel-%s is repeatedly bound to channel-id%s", channelId.asLongText(), id.asLongText()));
+        this.channelId = id;
     }
 
     /**

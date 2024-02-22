@@ -46,11 +46,11 @@ class EventChannelHandler extends SimpleChannelInboundHandler<Object> {
 
         if (msg instanceof TextWebSocketFrame) {
             JsonObject json = new Gson().fromJson(((TextWebSocketFrame) msg).text(), JsonObject.class);
+            log.debug("Received json message: {}", json);
             try {
                 chainHandler.handle(json);
             } catch (Exception e) {
-                log.warn("Consumer exception: ", e);
-                e.printStackTrace();
+                log.warn("Handler exception: ", e);
             }
         } else if (msg instanceof CloseWebSocketFrame){
             log.info("WebSocket client closed with signal");

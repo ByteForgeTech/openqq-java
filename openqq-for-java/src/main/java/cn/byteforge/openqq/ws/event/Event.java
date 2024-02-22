@@ -20,7 +20,7 @@ public class Event {
      * 下行消息都会有一个序列号，标识消息的唯一性，客户端需要再发送心跳的时候，携带客户端收到的最新的s。
      * */
     @SerializedName("s")
-    private String serialNumber;
+    private Long serialNumber;
 
     /**
      * 事件类型

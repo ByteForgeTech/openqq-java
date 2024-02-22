@@ -1,6 +1,6 @@
 package cn.byteforge.openqq.ws.handler;
 
-import cn.byteforge.openqq.ws.entity.BotContext;
+import cn.byteforge.openqq.ws.BotContext;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,6 +24,7 @@ public abstract class ChainHandler {
      * @return 返回为空，则终止调用
      * */
     public Object handle(Object o) {
+        if (o == null) return null;
         Object r = doHandle(o);
         if (nextHandler != null) {
             return nextHandler.handle(r);
