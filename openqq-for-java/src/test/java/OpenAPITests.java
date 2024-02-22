@@ -19,25 +19,47 @@ public class OpenAPITests {
     private static Certificate certificate;
 
     @BeforeAll
-    static void setup() throws IOException {
+    static void setup() throws Exception {
         String appId = new String(Files.readAllBytes(Paths.get("../secrets/appId.txt")));
         String clientSecret = new String(Files.readAllBytes(Paths.get("../secrets/clientSecret.txt")));
         AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
         certificate = new Certificate(appId, clientSecret, token);
-    }
 
-//    @Test
-    void testFind() {
+        int intents = 33554432;
+        String wssUrl = OpenAPI.getUniversalWssUrl(certificate);
+        System.out.println(wssUrl);
+        // TODO event bus, 可选事件监听
         ChainHandler chainHandler = ChainHandler.builder()
                 .append(new ErrorCheckHandler())
                 .append(new EventParseHandler())
                 .append(new HeartbeatHandler())
-//                .next(new SequenceHandler())
-                .append(new APICallbackHandler()).build();
-        System.out.println(chainHandler.find(EventParseHandler.class));
+                .append(new SequenceHandler())
+                .append(new APICallbackHandler())
+                .append(new ChainHandler() {
+                    // Event ->
+                    @Override
+                    protected Object doHandle(Object o) {
+                        System.out.println(o);
+                        return null;
+                    }
+                }).build();
+        BotContext context = BotContext.create(certificate, chainHandler);
+        // BotContext.newStandalone();
+        // BotContext.newShared();
+        QQConnection.connect(wssUrl, context, (id) -> {
+            // TODO 提供不分片和分片两种创建方法
+            Session session = WebSocketAPI.getSession(intents, Shard.STANDALONE, null, context);
+//            context.addSession(session);
+            System.out.println(session);
+        });
     }
 
     @Test
+    void testResume() throws Exception {
+
+    }
+
+//    @Test
     void testGetUniversalWssUrl() throws Exception {
         int intents = 33554432;
         String wssUrl = OpenAPI.getUniversalWssUrl(certificate);
@@ -58,9 +80,7 @@ public class OpenAPITests {
                 }).build();
         BotContext context = BotContext.create(certificate, chainHandler);
         QQConnection.connect(wssUrl, context, (id) -> {
-            // TODO 提供不分片和分片两种创建方法
             Session session = WebSocketAPI.getSession(intents, Shard.STANDALONE, null, context);
-//            context.addSession(session);
             System.out.println(session);
         });
         System.in.read();

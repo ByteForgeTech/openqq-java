@@ -21,7 +21,7 @@ public class HeartbeatRunnable implements Runnable {
         // first d is null
         WebSocketAPI.send(Maps.of(
                 "op", OpCode.HEARTBEAT.getCode(),
-                "d", context.getReceivedSerialNumber()
+                "d", context.getReceivedSequence()
         ), null, context);
     }
 

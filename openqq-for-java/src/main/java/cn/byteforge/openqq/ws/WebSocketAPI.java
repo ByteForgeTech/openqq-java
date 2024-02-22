@@ -27,6 +27,13 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 public class WebSocketAPI {
 
+    /**
+     * 获取登录态 Session
+     * @param intents 监听的事件
+     * @param shard 分片
+     * @param properties 暂时无用
+     * @param context 机器人上下文实例
+     * */
     @SneakyThrows
     public static Session getSession(int intents, Shard shard, @Nullable Map<String, Object> properties, BotContext context) {
         CompletableFuture<JsonObject> future = send(Maps.of(
@@ -42,6 +49,15 @@ public class WebSocketAPI {
     }
 
     /**
+     * 恢复登录态 Session
+     * @param context 机器人上下文实例
+     * */
+    public static void resumeSession(String sessionId, BotContext context) {
+
+    }
+
+    /**
+     * 发送请求并接收消息回调
      * @return d
      * */
     public static CompletableFuture<JsonObject> send(Object payload, @Nullable String callbackName, BotContext context) {

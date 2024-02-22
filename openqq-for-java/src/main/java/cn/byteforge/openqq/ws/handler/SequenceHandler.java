@@ -13,7 +13,7 @@ public class SequenceHandler extends ChainHandler {
         Event event = (Event) o;
         Long serialNumber = event.getSerialNumber();
         if (serialNumber != null) {
-            getContext().setReceivedSerialNumber(serialNumber);
+            getContext().setReceivedSequence(serialNumber);
         }
         return o;
     }

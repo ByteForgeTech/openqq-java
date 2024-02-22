@@ -1,6 +1,5 @@
 package cn.byteforge.openqq.ws;
 
-import com.google.gson.Gson;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
@@ -10,7 +9,6 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshaker;
 import io.netty.handler.codec.http.websocketx.WebSocketClientHandshakerFactory;
 import io.netty.handler.codec.http.websocketx.WebSocketVersion;
@@ -37,11 +35,26 @@ public class QQConnection {
     public static final ChannelGroup CLIENT_GROUPS = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     /**
-     * @param url websocket链接
+     * 重建 WebSocket 连接
+     * @param wssUrl wss 链接
      * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 ChannelId
      * */
-    public static void connect(String url, BotContext context, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
+    public static void reconnect(String wssUrl, BotContext context, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
+        doConnect(wssUrl, context, true, callback);
+    }
+
+    /**
+     * 建立 WebSocket 连接
+     * @param wssUrl wss 链接
+     * @param context 机器人上下文
+     * @param callback 连接成功时回调执行，回传 ChannelId
+     * */
+    public static void connect(String wssUrl, BotContext context, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
+        doConnect(wssUrl, context, false, callback);
+    }
+
+    private static void doConnect(String url, BotContext context, boolean reconnect, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
         EventChannelHandler eventHandler = new EventChannelHandler(context.getChainHandler());
         EventLoopGroup group = new NioEventLoopGroup();
         try {
@@ -77,7 +90,7 @@ public class QQConnection {
             // block until handshake success
             eventHandler.getHandshakeFuture().sync();
             CLIENT_GROUPS.add(channel);
-            context.bind(channel.id());
+            context.bind(channel.id(), reconnect);
             if (callback != null) callback.accept(channel.id());
             channel.closeFuture().sync();
         } catch (URISyntaxException e) {

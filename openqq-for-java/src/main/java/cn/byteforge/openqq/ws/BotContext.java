@@ -2,18 +2,19 @@ package cn.byteforge.openqq.ws;
 
 import cn.byteforge.openqq.model.Certificate;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
-import cn.hutool.core.lang.Assert;
 import io.netty.channel.ChannelId;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ConcurrentModificationException;
 
 /**
  * Bot 上下文
  * */
+@Slf4j
 @Data
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class BotContext {
@@ -34,20 +35,25 @@ public class BotContext {
     /**
      * 接收到的消息序号
      * */
-    private Long receivedSerialNumber;
+    private Long receivedSequence;
 
     /**
      * 处理到的消息序号
+     * TODO
+     * @apiNote reconnect 时，从此 seq 起补发中间遗漏的事件
      * */
-    private Long handledSerialNumber;
+    private Long handledSequence;
 
     /**
      * 将链接绑定机器人上下文
      * */
-    protected void bind(ChannelId id) {
-        if (channelId != null)
+    protected void bind(ChannelId id, boolean reconnect) {
+        if (!reconnect && channelId != null)
             throw new ConcurrentModificationException(String.format("BotContext with channel-%s is repeatedly bound to channel-id%s", channelId.asLongText(), id.asLongText()));
         this.channelId = id;
+        if (reconnect) {
+            log.info("Reconnect to server with new channel-{}", id.asLongText());
+        }
     }
 
     /**
