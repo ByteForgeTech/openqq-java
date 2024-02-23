@@ -43,7 +43,11 @@ public class QQConnection {
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
     public static void reconnect(String wssUrl, UUID uuid, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
-        doConnect(wssUrl, null, context, uuid, callback);
+        doConnect(wssUrl, null, context, uuid, (id) -> {
+            WebSocketAPI.resumeSession(uuid, context);
+            if (callback == null) return;
+            callback.accept(id);
+        });
     }
 
     /**
@@ -58,7 +62,7 @@ public class QQConnection {
     }
 
     private static void doConnect(String url, @Nullable ChainHandler chainHandler, BotContext context, @Nullable UUID uuid, @Nullable Consumer<UUID> callback) throws InterruptedException {
-        EventChannelHandler eventHandler = new EventChannelHandler(context.getChainHandler());
+        EventChannelHandler eventHandler = new EventChannelHandler(getChainHandler(chainHandler, uuid, context));
         EventLoopGroup group = new NioEventLoopGroup();
         try {
             Bootstrap bootstrap = new Bootstrap()
@@ -98,6 +102,12 @@ public class QQConnection {
                 context.updateChannel(uuid, channel.id());
             } else {
                 uuid = context.bindChannel(channel.id(), chainHandler);
+                // set context to ChainHandler
+                ChainHandler next = chainHandler;
+                while (next != null) {
+                    next.setContext(context);
+                    next = next.next();
+                }
             }
             if (callback != null) callback.accept(uuid);
             channel.closeFuture().sync();
@@ -106,6 +116,11 @@ public class QQConnection {
         } finally {
             group.shutdownGracefully();
         }
+    }
+
+    private static ChainHandler getChainHandler(@Nullable ChainHandler chainHandler, @Nullable UUID uuid, BotContext context) {
+        if (chainHandler != null) return chainHandler;
+        return context.getConnMap().get(uuid).getValue();
     }
 
 }

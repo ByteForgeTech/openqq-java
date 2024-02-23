@@ -1,6 +1,9 @@
 package cn.byteforge.openqq.ws;
 
+import cn.byteforge.openqq.exception.InvalidShardException;
 import cn.byteforge.openqq.model.Certificate;
+import cn.byteforge.openqq.ws.entity.Session;
+import cn.byteforge.openqq.ws.entity.Shard;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.Pair;
@@ -11,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,6 +38,18 @@ public class BotContext {
     private Map<UUID, Pair<ChannelId, ChainHandler>> connMap;
 
     /**
+     * 分片注册数组
+     * */
+    @Setter(AccessLevel.NONE)
+    private Pair<UUID, Shard>[] shardsConfigured;
+
+    /**
+     * Session Map
+     * */
+    @Setter(AccessLevel.NONE)
+    private Map<UUID, Session> sessionMap;
+
+    /**
      * 接收到的消息序号
      * */
     private Long receivedSequence;
@@ -49,6 +63,23 @@ public class BotContext {
 
     {
         this.connMap = new ConcurrentHashMap<>();
+        this.sessionMap = new ConcurrentHashMap<>();
+    }
+
+    /**
+     * 配置并检查当前上下文分片
+     * */
+    @SuppressWarnings("unchecked")
+    protected void configureShard(UUID uuid, Shard shard) {
+        try {
+            if (shardsConfigured == null) {
+                shardsConfigured = new Pair[shard.getSize()];
+            }
+            Assert.isNull(shardsConfigured[shard.getIndex()]);
+            shardsConfigured[shard.getIndex()] = new Pair<>(uuid, shard);
+        } catch (Exception e) {
+            throw new InvalidShardException(shard, shardsConfigured);
+        }
     }
 
     /**

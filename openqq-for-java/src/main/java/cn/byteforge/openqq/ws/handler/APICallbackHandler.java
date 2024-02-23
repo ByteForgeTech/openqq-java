@@ -28,7 +28,8 @@ public class APICallbackHandler extends ChainHandler {
     }
 
     private void initDataMap() {
-        List<String> eventTypes = Collections.singletonList(EventType.READY);
+        // TODO 枚举筛选注册
+        List<String> eventTypes = Arrays.asList(EventType.READY, EventType.RESUMED);
         for (String eventType : eventTypes) {
             dataMap.computeIfAbsent(eventType, k -> new LinkedBlockingQueue<>());
         }
@@ -41,7 +42,11 @@ public class APICallbackHandler extends ChainHandler {
         Event event = (Event) o;
         switch (event.getEventType()) {
             case EventType.READY: {
-                dataMap.get(EventType.READY).put(event.getData());
+                dataMap.get(EventType.READY).put((JsonObject) event.getData());
+                return null;
+            }
+            case EventType.RESUMED: {
+                dataMap.get(EventType.RESUMED).put(new JsonObject());
                 return null;
             }
             default:

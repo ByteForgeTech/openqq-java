@@ -1,5 +1,6 @@
 package cn.byteforge.openqq.ws.event;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.annotations.SerializedName;
 import cn.byteforge.openqq.ws.entity.OpCode;
@@ -20,7 +21,7 @@ public class Event {
      * 下行消息都会有一个序列号，标识消息的唯一性，客户端需要再发送心跳的时候，携带客户端收到的最新的s。
      * */
     @SerializedName("s")
-    private Long serialNumber;
+    private Long sequenceNumber;
 
     /**
      * 事件类型
@@ -34,6 +35,6 @@ public class Event {
      * 不同事件类型的事件内容格式都不同，请注意识别。
      * */
     @SerializedName("d")
-    private JsonObject data;
+    private JsonElement data;
 
 }

@@ -2,6 +2,7 @@ package cn.byteforge.openqq.ws.handler;
 
 import cn.byteforge.openqq.task.HeartbeatRunnable;
 import cn.byteforge.openqq.ws.event.Event;
+import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Executors;
@@ -31,13 +32,12 @@ public class HeartbeatHandler extends ChainHandler {
             case HELLO: {
                 if (scheduledFuture != null) {
                     scheduledFuture.cancel(true);
-                    log.warn("Duplicate heartbeat thread detected !");
+                    log.info("Duplicate heartbeat thread detected, is this connection reconnect ?");
                 }
                 // start to heartbeat
-                long interval = event.getData().get("heartbeat_interval").getAsLong();
+                long interval = ((JsonObject) event.getData()).get("heartbeat_interval").getAsLong();
                 // ScheduledExecutor leaves 20% of the interval to avoid errors
-//                interval -= (interval / 10) * 2;
-                interval = 1000;
+                interval -= (interval / 10) * 2;
                 scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getContext()), interval, interval, TimeUnit.MILLISECONDS);
                 log.debug("Heartbeat thread start");
                 return null;

@@ -22,7 +22,7 @@ public class HeartbeatRunnable implements Runnable {
         WebSocketAPI.send(Maps.of(
                 "op", OpCode.HEARTBEAT.getCode(),
                 "d", context.getReceivedSequence()
-        ), null, context);
+        ), null, WebSocketAPI.NO_NEED_CALLBACK, context);
     }
 
 }
