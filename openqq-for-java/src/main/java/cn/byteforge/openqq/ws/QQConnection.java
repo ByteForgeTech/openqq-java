@@ -1,5 +1,6 @@
 package cn.byteforge.openqq.ws;
 
+import cn.byteforge.openqq.ws.handler.ChainHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
@@ -22,6 +23,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -38,23 +40,24 @@ public class QQConnection {
      * 重建 WebSocket 连接
      * @param wssUrl wss 链接
      * @param context 机器人上下文
-     * @param callback 连接成功时回调执行，回传 ChannelId
+     * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
-    public static void reconnect(String wssUrl, BotContext context, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
-        doConnect(wssUrl, context, true, callback);
+    public static void reconnect(String wssUrl, UUID uuid, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
+        doConnect(wssUrl, null, context, uuid, callback);
     }
 
     /**
      * 建立 WebSocket 连接
      * @param wssUrl wss 链接
+     * @param chainHandler 链式处理实例
      * @param context 机器人上下文
-     * @param callback 连接成功时回调执行，回传 ChannelId
+     * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
-    public static void connect(String wssUrl, BotContext context, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
-        doConnect(wssUrl, context, false, callback);
+    public static void connect(String wssUrl, ChainHandler chainHandler, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
+        doConnect(wssUrl, chainHandler, context, null, callback);
     }
 
-    private static void doConnect(String url, BotContext context, boolean reconnect, @Nullable Consumer<ChannelId> callback) throws InterruptedException {
+    private static void doConnect(String url, @Nullable ChainHandler chainHandler, BotContext context, @Nullable UUID uuid, @Nullable Consumer<UUID> callback) throws InterruptedException {
         EventChannelHandler eventHandler = new EventChannelHandler(context.getChainHandler());
         EventLoopGroup group = new NioEventLoopGroup();
         try {
@@ -90,8 +93,13 @@ public class QQConnection {
             // block until handshake success
             eventHandler.getHandshakeFuture().sync();
             CLIENT_GROUPS.add(channel);
-            context.bind(channel.id(), reconnect);
-            if (callback != null) callback.accept(channel.id());
+
+            if (uuid != null) { // reconnect
+                context.updateChannel(uuid, channel.id());
+            } else {
+                uuid = context.bindChannel(channel.id(), chainHandler);
+            }
+            if (callback != null) callback.accept(uuid);
             channel.closeFuture().sync();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

@@ -43,10 +43,11 @@ public class OpenAPITests {
                         return null;
                     }
                 }).build();
-        BotContext context = BotContext.create(certificate, chainHandler);
+        BotContext context = BotContext.create(certificate);
         // BotContext.newStandalone();
         // BotContext.newShared();
-        QQConnection.connect(wssUrl, context, (id) -> {
+        // 一个 context 多个connect(Shard)，每个 shard 一个 chainHandler
+        QQConnection.connect(wssUrl, chainHandler, context, (id) -> {
             // TODO 提供不分片和分片两种创建方法
             Session session = WebSocketAPI.getSession(intents, Shard.STANDALONE, null, context);
 //            context.addSession(session);
@@ -57,33 +58,6 @@ public class OpenAPITests {
     @Test
     void testResume() throws Exception {
 
-    }
-
-//    @Test
-    void testGetUniversalWssUrl() throws Exception {
-        int intents = 33554432;
-        String wssUrl = OpenAPI.getUniversalWssUrl(certificate);
-        System.out.println(wssUrl);
-        ChainHandler chainHandler = ChainHandler.builder()
-                .append(new ErrorCheckHandler())
-                .append(new EventParseHandler())
-                .append(new HeartbeatHandler())
-                .append(new SequenceHandler())
-                .append(new APICallbackHandler())
-                .append(new ChainHandler() {
-                    // Event ->
-                    @Override
-                    protected Object doHandle(Object o) {
-                        System.out.println(o);
-                        return null;
-                    }
-                }).build();
-        BotContext context = BotContext.create(certificate, chainHandler);
-        QQConnection.connect(wssUrl, context, (id) -> {
-            Session session = WebSocketAPI.getSession(intents, Shard.STANDALONE, null, context);
-            System.out.println(session);
-        });
-        System.in.read();
     }
 
     @Test
