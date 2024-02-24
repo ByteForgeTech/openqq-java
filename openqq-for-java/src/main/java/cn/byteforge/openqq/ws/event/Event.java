@@ -1,13 +1,16 @@
 package cn.byteforge.openqq.ws.event;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.annotations.SerializedName;
 import cn.byteforge.openqq.ws.entity.OpCode;
+import com.google.gson.JsonElement;
+import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @Data
-public class Event {
+public class Event extends MetaEvent {
 
     /**
      * 长连接维护 OpCode
@@ -30,11 +33,11 @@ public class Event {
     private String eventType;
 
     /**
-     * 事件内容
+     * 原始事件内容
      * <br>
      * 不同事件类型的事件内容格式都不同，请注意识别。
      * */
-    @SerializedName("d")
-    private JsonElement data;
+    @ToString.Exclude
+    private JsonElement d;
 
 }

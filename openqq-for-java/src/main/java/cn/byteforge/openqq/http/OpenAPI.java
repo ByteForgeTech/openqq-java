@@ -1,16 +1,19 @@
 package cn.byteforge.openqq.http;
 
-import cn.hutool.http.*;
+import cn.byteforge.openqq.Global;
+import cn.byteforge.openqq.exception.APIInvokeException;
+import cn.byteforge.openqq.http.entity.AccessToken;
+import cn.byteforge.openqq.http.entity.RecommendShard;
+import cn.byteforge.openqq.http.entity.Status;
+import cn.byteforge.openqq.model.Certificate;
+import cn.byteforge.openqq.util.Maps;
+import cn.hutool.http.HttpGlobalConfig;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
+import cn.hutool.http.Method;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import cn.byteforge.openqq.exception.APIInvokeException;
-import cn.byteforge.openqq.http.entity.AccessToken;
-import cn.byteforge.openqq.http.entity.Status;
-import cn.byteforge.openqq.Global;
-import cn.byteforge.openqq.http.entity.SliceShard;
-import cn.byteforge.openqq.model.Certificate;
-import cn.byteforge.openqq.util.Maps;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -45,10 +48,10 @@ public class OpenAPI {
     }
 
     /**
-     * 获取带分片 WSS 接入点
+     * 获取带推荐分片数的 WSS 接入点
      * */
-    public static SliceShard getSliceWssUrls(Certificate cert) {
-        return getAuthResponse("https://api.sgroup.qq.com/gateway/bot", null, Method.GET, cert, SliceShard.class);
+    public static RecommendShard getRecommendShardWssUrls(Certificate cert) {
+        return getAuthResponse("https://api.sgroup.qq.com/gateway/bot", null, Method.GET, cert, RecommendShard.class);
     }
 
     private static <T> T getAuthResponse(String url, @NotNull Map<String, Object> data, Method method, Certificate cert, Class<T> clazz) {

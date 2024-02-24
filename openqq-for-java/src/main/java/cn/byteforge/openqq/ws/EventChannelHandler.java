@@ -1,8 +1,8 @@
 package cn.byteforge.openqq.ws;
 
+import cn.byteforge.openqq.ws.handler.ChainHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import cn.byteforge.openqq.ws.handler.ChainHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import io.netty.channel.SimpleChannelInboundHandler;

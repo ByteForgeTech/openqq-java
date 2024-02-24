@@ -1,17 +1,17 @@
 package cn.byteforge.openqq.ws;
 
 import cn.byteforge.openqq.Global;
+import cn.byteforge.openqq.util.Maps;
+import cn.byteforge.openqq.ws.entity.OpCode;
+import cn.byteforge.openqq.ws.entity.Session;
 import cn.byteforge.openqq.ws.entity.Shard;
 import cn.byteforge.openqq.ws.event.EventType;
 import cn.byteforge.openqq.ws.handler.APICallbackHandler;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
+import cn.byteforge.openqq.ws.handler.EventParseHandler;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.Pair;
 import com.google.gson.JsonObject;
-import cn.byteforge.openqq.util.Maps;
-import cn.byteforge.openqq.ws.entity.OpCode;
-import cn.byteforge.openqq.ws.entity.Session;
-import cn.byteforge.openqq.ws.handler.EventParseHandler;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelId;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -82,7 +82,7 @@ public class WebSocketAPI {
                 "d", Maps.of(
                         "token", String.format(Global.Authorization, context.getCertificate().getAccessToken().getContent()),
                         "session_id", oldSession.getSessionId(),
-                        "seq", context.getReceivedSequence()
+                        "seq", context.getReceivedSeqMap().get(uuid)
                 )
         ), uuid, EventType.RESUMED, context);
         future.join();

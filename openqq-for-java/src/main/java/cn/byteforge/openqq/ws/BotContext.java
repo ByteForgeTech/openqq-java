@@ -50,20 +50,23 @@ public class BotContext {
     private Map<UUID, Session> sessionMap;
 
     /**
-     * 接收到的消息序号
+     * 接收到的消息序号 Map
      * */
-    private Long receivedSequence;
+    @Setter(AccessLevel.NONE)
+    private Map<UUID, Long> receivedSeqMap;
 
     /**
-     * 处理到的消息序号
-     * TODO
+     * 处理到的消息序号 Map
      * @apiNote reconnect 时，从此 seq 起补发中间遗漏的事件
      * */
-    private Long handledSequence;
+    @Setter(AccessLevel.NONE)
+    private Map<UUID, Long> handledSeqMap;
 
     {
         this.connMap = new ConcurrentHashMap<>();
         this.sessionMap = new ConcurrentHashMap<>();
+        this.receivedSeqMap = new ConcurrentHashMap<>();
+        this.handledSeqMap = new ConcurrentHashMap<>();
     }
 
     /**

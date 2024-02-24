@@ -8,11 +8,10 @@ import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -21,7 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class APICallbackHandler extends ChainHandler {
 
     // EventType: JsonData
-    private final Map<String, BlockingQueue<JsonObject>> dataMap = new ConcurrentHashMap<>();
+    private final Map<String, BlockingQueue<JsonObject>> dataMap = new HashMap<>();
 
     public APICallbackHandler() {
         initDataMap();
@@ -42,7 +41,7 @@ public class APICallbackHandler extends ChainHandler {
         Event event = (Event) o;
         switch (event.getEventType()) {
             case EventType.READY: {
-                dataMap.get(EventType.READY).put((JsonObject) event.getData());
+                dataMap.get(EventType.READY).put((JsonObject) event.getD());
                 return null;
             }
             case EventType.RESUMED: {

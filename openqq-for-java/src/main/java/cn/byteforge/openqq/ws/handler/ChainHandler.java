@@ -1,18 +1,24 @@
 package cn.byteforge.openqq.ws.handler;
 
 import cn.byteforge.openqq.ws.BotContext;
+import cn.hutool.core.lang.Assert;
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
 
 /**
  * 链式处理抽象类
+ * @apiNote 不负责状态维护，非线程安全
  * */
 public abstract class ChainHandler {
 
+    // 当前 ChainHandler 对应的 UUID
+    @Getter(AccessLevel.PROTECTED)
+    private UUID uuid;
+
     // 当前机器人实例上下文对象
-    @Setter
     @Getter(AccessLevel.PROTECTED)
     private BotContext context;
 
@@ -50,6 +56,15 @@ public abstract class ChainHandler {
             inst = inst.nextHandler;
         }
         return null;
+    }
+
+    /**
+     * 设置当前 ChainHandler 元数据
+     * */
+    public void setMetaData(UUID uuid, BotContext context) {
+        Assert.isTrue(this.uuid == null && this.context == null, "ChainHandler metadata is set repeatedly");
+        this.uuid = uuid;
+        this.context = context;
     }
 
     /**

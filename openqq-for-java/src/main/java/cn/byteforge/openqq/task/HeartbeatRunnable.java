@@ -5,14 +5,18 @@ import cn.byteforge.openqq.ws.BotContext;
 import cn.byteforge.openqq.ws.WebSocketAPI;
 import cn.byteforge.openqq.ws.entity.OpCode;
 
+import java.util.UUID;
+
 /**
  * Heartbeat with fixed interval
  * */
 public class HeartbeatRunnable implements Runnable {
 
+    private final UUID uuid;
     private final BotContext context;
 
-    public HeartbeatRunnable(BotContext context) {
+    public HeartbeatRunnable(UUID uuid, BotContext context) {
+        this.uuid = uuid;
         this.context = context;
     }
 
@@ -21,7 +25,7 @@ public class HeartbeatRunnable implements Runnable {
         // first d is null
         WebSocketAPI.send(Maps.of(
                 "op", OpCode.HEARTBEAT.getCode(),
-                "d", context.getReceivedSequence()
+                "d", context.getReceivedSeqMap().get(uuid)
         ), null, WebSocketAPI.NO_NEED_CALLBACK, context);
     }
 

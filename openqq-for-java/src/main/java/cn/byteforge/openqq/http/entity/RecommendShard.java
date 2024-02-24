@@ -4,10 +4,10 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 /**
- * 分片 WSS 接入点
+ * 携带推荐分片参数的 WSS 接入点
  * */
 @Data
-public class SliceShard {
+public class RecommendShard {
 
     /**
      * WebSocket 的连接地址

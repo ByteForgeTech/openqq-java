@@ -1,8 +1,6 @@
 package cn.byteforge.openqq.ws.entity;
 
 import cn.hutool.core.lang.Assert;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**

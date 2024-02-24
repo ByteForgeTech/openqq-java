@@ -1,9 +1,11 @@
 import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.AccessToken;
+import cn.byteforge.openqq.http.entity.RecommendShard;
 import cn.byteforge.openqq.model.Certificate;
+import cn.byteforge.openqq.ws.BotContext;
 import cn.byteforge.openqq.ws.QQConnection;
 import cn.byteforge.openqq.ws.WebSocketAPI;
-import cn.byteforge.openqq.ws.BotContext;
+import cn.byteforge.openqq.ws.entity.Intent;
 import cn.byteforge.openqq.ws.entity.Shard;
 import cn.byteforge.openqq.ws.handler.*;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,11 +30,13 @@ public class OpenAPITests {
         AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
         Certificate certificate = new Certificate(appId, clientSecret, token);
         context = BotContext.create(certificate);
-        wssUrl = OpenAPI.getUniversalWssUrl(certificate);
+        RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
+        wssUrl = shard.getUrl();
+        System.out.println(shard);
     }
 
     private static UUID resumeUUID = null;
-    @Test
+//    @Test
     void testResume() throws Exception {
         int intents = 33554432;
         // TODO event bus, 可选事件监听
@@ -52,8 +56,6 @@ public class OpenAPITests {
                 })
                 .append(new SequenceHandler.Handled()).build();
 
-
-        // 一个 context 多个connect(Shard)，每个 shard 一个 chainHandler
         QQConnection.connect(wssUrl, chainHandler, context, (uuid) -> {
             resumeUUID = uuid;
             WebSocketAPI.newShardSession(intents, uuid, Shard.STANDALONE, null, context);
@@ -95,7 +97,6 @@ public class OpenAPITests {
                         .append(new SequenceHandler.Handled())
                         .build();
 
-                // 一个 context 多个connect(Shard)，每个 shard 一个 chainHandler
                 try {
                     QQConnection.connect(wssUrl, chainHandler, context, (uuid) -> {
                         WebSocketAPI.newShardSession(intents, uuid, shard, null, context);
@@ -105,11 +106,29 @@ public class OpenAPITests {
                     throw new RuntimeException(e);
                 }
             });
-            Thread.sleep(2000);
+            // TODO 每5s可创建的Session有限
+            Thread.sleep(5000);
         }
         Thread.sleep(5000);
         System.out.println(context);
     }
+
+    @Test
+    void testIntent() {
+        System.out.println(Intent.register()
+                .withGuilds()
+                .withGuildMembers()
+                .withGuildMessages()
+                .withGuildMessageReactions()
+                .withDirectMessage()
+                .withForumsEvent()
+                .withInteraction()
+                .withMessageAudit()
+                .withForumsEvent()
+                .withAudioAction()
+                .withPublicGuidMessages()
+                .done().getValue());
+   }
 
     @Test
     void testInterrupt() throws Exception {

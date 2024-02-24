@@ -35,10 +35,10 @@ public class HeartbeatHandler extends ChainHandler {
                     log.info("Duplicate heartbeat thread detected, is this connection reconnect ?");
                 }
                 // start to heartbeat
-                long interval = ((JsonObject) event.getData()).get("heartbeat_interval").getAsLong();
+                long interval = ((JsonObject) event.getD()).get("heartbeat_interval").getAsLong();
                 // ScheduledExecutor leaves 20% of the interval to avoid errors
                 interval -= (interval / 10) * 2;
-                scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getContext()), interval, interval, TimeUnit.MILLISECONDS);
+                scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getUuid(), getContext()), interval, interval, TimeUnit.MILLISECONDS);
                 log.debug("Heartbeat thread start");
                 return null;
             }

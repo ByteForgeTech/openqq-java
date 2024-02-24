@@ -2,7 +2,10 @@ package cn.byteforge.openqq.ws;
 
 import cn.byteforge.openqq.ws.handler.ChainHandler;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -53,7 +56,7 @@ public class QQConnection {
     /**
      * 建立 WebSocket 连接
      * @param wssUrl wss 链接
-     * @param chainHandler 链式处理实例
+     * @param chainHandler 链式处理实例，使用分片连接时请分别生成每个链接对应的 ChainHandler，确保线程安全
      * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
@@ -105,7 +108,7 @@ public class QQConnection {
                 // set context to ChainHandler
                 ChainHandler next = chainHandler;
                 while (next != null) {
-                    next.setContext(context);
+                    next.setMetaData(uuid, context);
                     next = next.next();
                 }
             }

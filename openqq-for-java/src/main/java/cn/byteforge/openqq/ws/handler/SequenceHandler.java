@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * 序列号处理
+ * TODO 多连接序列记录
  * */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SequenceHandler {
@@ -21,7 +22,7 @@ public class SequenceHandler {
             Event event = (Event) o;
             Long sequenceNumber = event.getSequenceNumber();
             if (sequenceNumber != null) {
-                getContext().setReceivedSequence(sequenceNumber);
+                getContext().getReceivedSeqMap().put(getUuid(), sequenceNumber);
             }
             return o;
         }
@@ -39,7 +40,7 @@ public class SequenceHandler {
             Event event = (Event) o;
             Long sequenceNumber = event.getSequenceNumber();
             if (sequenceNumber != null) {
-                getContext().setHandledSequence(sequenceNumber);
+                getContext().getHandledSeqMap().put(getUuid(), sequenceNumber);
             }
             return o;
         }
