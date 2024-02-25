@@ -9,6 +9,14 @@ import java.util.Map;
 @UtilityClass
 public class Maps {
 
+    public static <K, V> Map<K, V> empty() {
+        return Collections.emptyMap();
+    }
+
+    public static <K, V> Map<K, V> of() {
+        return empty();
+    }
+
     public static <K, V> Map<K, V> of(K k, V v) {
         return Collections.singletonMap(k, v);
     }

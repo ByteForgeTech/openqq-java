@@ -13,9 +13,9 @@ import lombok.ToString;
 @ToString
 public class Certificate {
 
-    private final String AppId;
+    private final String appId;
 
-    private final String ClientSecret;
+    private final String clientSecret;
 
     private final AccessToken accessToken;
 

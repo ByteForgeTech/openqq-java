@@ -1,5 +1,6 @@
-package cn.byteforge.openqq.ws.entity;
+package cn.byteforge.openqq.ws.entity.enumerate;
 
+import cn.byteforge.openqq.ws.entity.Intent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

@@ -1,6 +1,9 @@
 import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.AccessToken;
 import cn.byteforge.openqq.http.entity.RecommendShard;
+import cn.byteforge.openqq.http.entity.entry.LinkedTextEntry;
+import cn.byteforge.openqq.message.Message;
+import cn.byteforge.openqq.message.MessageBuilder;
 import cn.byteforge.openqq.model.Certificate;
 import cn.byteforge.openqq.ws.BotContext;
 import cn.byteforge.openqq.ws.QQConnection;
@@ -8,11 +11,13 @@ import cn.byteforge.openqq.ws.WebSocketAPI;
 import cn.byteforge.openqq.ws.entity.Intent;
 import cn.byteforge.openqq.ws.entity.Shard;
 import cn.byteforge.openqq.ws.handler.*;
+import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +43,7 @@ public class OpenAPITests {
     private static UUID resumeUUID = null;
 //    @Test
     void testResume() throws Exception {
-        int intents = 33554432;
+        Intent intents = Intent.register().withCustom(1 << 25).done();
         // TODO event bus, 可选事件监听
         ChainHandler chainHandler = ChainHandler.builder()
                 .append(new ErrorCheckHandler())
@@ -74,9 +79,9 @@ public class OpenAPITests {
         });
     }
 
-    @Test
+//    @Test
     void testShard() throws Exception {
-        int intents = 33554432;
+        Intent intents = Intent.register().withCustom(1 << 25).done();
 
         for (Shard shard : Shard.generate(3)) {
             SERVICE.submit(() -> {
@@ -111,6 +116,25 @@ public class OpenAPITests {
         }
         Thread.sleep(5000);
         System.out.println(context);
+    }
+
+    @Test
+    void testOpenAPI() {
+        Message message = new MessageBuilder()
+//                .addLinkedTextListArk(
+//                        "描述111",
+//                        "提示消息2222",
+//                        Arrays.asList(
+//                                new LinkedTextEntry("需求标题：UI问题解决", null),
+//                                new LinkedTextEntry("当前状态\"体验中\"点击下列动作直接扭转状态到：", null),
+//                                new LinkedTextEntry("已评审", null/*"https://qun.qq.com"*/)
+//                        )
+//                )
+                .addText("你好")
+                .setPassive("ROBOT1.0_TyDZbpEruJp-GgVv3PuQUu2iALlIpLCnvEt5VZjMOgXKSestgnr4kjM4RjXpntFudQkZSHKRXbWWdC.bTg1qnw!!", 4)
+                .build();
+        System.out.println(new Gson().toJson(message.getData()));
+//        OpenAPI.sendGroupMessage("D5F67D40DCF78B52E48A36E7EE27B566", message, context.getCertificate());
     }
 
     @Test

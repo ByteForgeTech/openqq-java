@@ -1,7 +1,7 @@
 package cn.byteforge.openqq.ws.handler;
 
 import cn.byteforge.openqq.util.Maps;
-import cn.byteforge.openqq.ws.entity.OpCode;
+import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import cn.byteforge.openqq.ws.event.Event;
 import cn.byteforge.openqq.ws.event.type.C2CMessageEvent;
 import cn.byteforge.openqq.ws.event.type.GroupAtMessageEvent;

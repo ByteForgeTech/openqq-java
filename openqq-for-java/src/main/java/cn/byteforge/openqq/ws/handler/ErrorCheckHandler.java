@@ -2,7 +2,7 @@ package cn.byteforge.openqq.ws.handler;
 
 import cn.byteforge.openqq.exception.ErrorCheckException;
 import cn.byteforge.openqq.exception.WebSocketInvokeException;
-import cn.byteforge.openqq.ws.entity.OpCode;
+import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import com.google.gson.JsonObject;
 
 /**

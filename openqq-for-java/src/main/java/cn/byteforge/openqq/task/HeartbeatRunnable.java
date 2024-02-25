@@ -3,7 +3,7 @@ package cn.byteforge.openqq.task;
 import cn.byteforge.openqq.util.Maps;
 import cn.byteforge.openqq.ws.BotContext;
 import cn.byteforge.openqq.ws.WebSocketAPI;
-import cn.byteforge.openqq.ws.entity.OpCode;
+import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 
 import java.util.UUID;
 
@@ -26,7 +26,7 @@ public class HeartbeatRunnable implements Runnable {
         WebSocketAPI.send(Maps.of(
                 "op", OpCode.HEARTBEAT.getCode(),
                 "d", context.getReceivedSeqMap().get(uuid)
-        ), null, WebSocketAPI.NO_NEED_CALLBACK, context);
+        ), uuid, WebSocketAPI.NO_NEED_CALLBACK, context);
     }
 
 }

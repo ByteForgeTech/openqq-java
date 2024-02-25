@@ -40,7 +40,7 @@ public class QQConnection {
     public static final ChannelGroup CLIENT_GROUPS = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     /**
-     * 重建 WebSocket 连接
+     * 重建 WebSocket 连接，自动刷新 session
      * @param wssUrl wss 链接
      * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接

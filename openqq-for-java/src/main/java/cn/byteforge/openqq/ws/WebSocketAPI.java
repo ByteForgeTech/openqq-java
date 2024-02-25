@@ -2,7 +2,8 @@ package cn.byteforge.openqq.ws;
 
 import cn.byteforge.openqq.Global;
 import cn.byteforge.openqq.util.Maps;
-import cn.byteforge.openqq.ws.entity.OpCode;
+import cn.byteforge.openqq.ws.entity.Intent;
+import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import cn.byteforge.openqq.ws.entity.Session;
 import cn.byteforge.openqq.ws.entity.Shard;
 import cn.byteforge.openqq.ws.event.EventType;
@@ -34,31 +35,31 @@ public class WebSocketAPI {
 
     /**
      * 创建登录态 Session
-     * @param intents 监听的事件
+     * @param intent 监听的事件类型
      * @param uuid session 绑定的连接 id
      * @param properties 暂时无用
      * @param context 机器人上下文实例
      * */
-    public static Session newStandaloneSession(int intents, UUID uuid, @Nullable Map<String, Object> properties, BotContext context) {
-        return newShardSession(intents, uuid, Shard.STANDALONE, properties, context);
+    public static Session newStandaloneSession(Intent intent, UUID uuid, @Nullable Map<String, Object> properties, BotContext context) {
+        return newShardSession(intent, uuid, Shard.STANDALONE, properties, context);
     }
 
     /**
      * 创建当前分片的登录态 Session
-     * @param intents 监听的事件
+     * @param intent 监听的事件类型
      * @param uuid session 绑定的连接 id
      * @param shard 分片
      * @param properties 暂时无用
      * @param context 机器人上下文实例
      * */
     @SneakyThrows
-    public static Session newShardSession(int intents, UUID uuid, Shard shard, @Nullable Map<String, Object> properties, BotContext context) {
+    public static Session newShardSession(Intent intent, UUID uuid, Shard shard, @Nullable Map<String, Object> properties, BotContext context) {
         context.configureShard(uuid, shard);
         CompletableFuture<JsonObject> future = send(Maps.of(
                 "op", OpCode.IDENTIFY.getCode(),
                 "d", Maps.of(
                         "token", String.format(Global.Authorization, context.getCertificate().getAccessToken().getContent()),
-                        "intents", intents,
+                        "intents", intent.getValue(),
                         "shard", shard.toArray(),
                         "properties", properties
                 )

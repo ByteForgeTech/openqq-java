@@ -1,6 +1,6 @@
 package cn.byteforge.openqq.ws.event;
 
-import cn.byteforge.openqq.ws.entity.OpCode;
+import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;

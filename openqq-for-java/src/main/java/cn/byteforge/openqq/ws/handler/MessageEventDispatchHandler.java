@@ -1,6 +1,6 @@
 package cn.byteforge.openqq.ws.handler;
 
-import cn.byteforge.openqq.ws.entity.IntentEnum;
+import cn.byteforge.openqq.ws.entity.enumerate.IntentEnum;
 import cn.byteforge.openqq.ws.event.EventListener;
 import cn.byteforge.openqq.ws.event.type.MessageEvent;
 import lombok.extern.slf4j.Slf4j;
