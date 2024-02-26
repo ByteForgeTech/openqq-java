@@ -1,6 +1,7 @@
-package cn.byteforge.openqq.ws.event.type;
+package cn.byteforge.openqq.ws.event.type.group;
 
-import cn.byteforge.openqq.ws.entity.data.GroupAtMessageEventData;
+import cn.byteforge.openqq.ws.entity.data.GroupAtMessageData;
+import cn.byteforge.openqq.ws.event.type.MessageEvent;
 import com.google.gson.Gson;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -17,8 +18,8 @@ public class GroupAtMessageEvent extends MessageEvent {
     /**
      * 获取事件字段数据
      * */
-    public GroupAtMessageEventData getData() {
-        return new Gson().fromJson(getD(), GroupAtMessageEventData.class);
+    public GroupAtMessageData getData() {
+        return new Gson().fromJson(getD(), GroupAtMessageData.class);
     }
 
 }

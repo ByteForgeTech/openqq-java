@@ -1,5 +1,6 @@
-package cn.byteforge.openqq.ws.event.type;
+package cn.byteforge.openqq.ws.event.type.friend;
 
+import cn.byteforge.openqq.ws.event.type.MessageEvent;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

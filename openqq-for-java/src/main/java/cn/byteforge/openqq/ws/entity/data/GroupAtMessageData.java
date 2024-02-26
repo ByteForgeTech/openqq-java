@@ -8,7 +8,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Data
-public class GroupAtMessageEventData extends MessageEventData {
+public class GroupAtMessageData extends MessageData {
 
     /**
      * @see #groupOpenid

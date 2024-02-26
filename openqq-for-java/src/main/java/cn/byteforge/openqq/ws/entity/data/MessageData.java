@@ -4,7 +4,7 @@ import cn.byteforge.openqq.ws.entity.Author;
 import lombok.Data;
 
 @Data
-public class MessageEventData {
+public class MessageData {
 
     /**
      * 平台方消息 ID，可以用于被动消息发送

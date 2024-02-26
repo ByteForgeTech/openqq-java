@@ -1,6 +1,6 @@
 package cn.byteforge.openqq.ws.event.type;
 
-import cn.byteforge.openqq.ws.entity.data.MessageEventData;
+import cn.byteforge.openqq.ws.entity.data.MessageData;
 import cn.byteforge.openqq.ws.event.Event;
 import com.google.gson.Gson;
 import lombok.Data;
@@ -23,8 +23,8 @@ public abstract class MessageEvent extends Event {
     /**
      * 获取事件字段数据
      * */
-    public MessageEventData getData() {
-        return new Gson().fromJson(getD(), MessageEventData.class);
+    public MessageData getData() {
+        return new Gson().fromJson(getD(), MessageData.class);
     }
 
 }
