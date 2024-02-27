@@ -1,7 +1,6 @@
 import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.AccessToken;
 import cn.byteforge.openqq.http.entity.RecommendShard;
-import cn.byteforge.openqq.http.entity.entry.LinkedTextEntry;
 import cn.byteforge.openqq.message.Message;
 import cn.byteforge.openqq.message.MessageBuilder;
 import cn.byteforge.openqq.model.Certificate;
@@ -10,15 +9,14 @@ import cn.byteforge.openqq.ws.QQConnection;
 import cn.byteforge.openqq.ws.WebSocketAPI;
 import cn.byteforge.openqq.ws.entity.Intent;
 import cn.byteforge.openqq.ws.entity.Shard;
+import cn.byteforge.openqq.ws.event.EventListener;
+import cn.byteforge.openqq.ws.event.type.group.GroupAddRobotEvent;
 import cn.byteforge.openqq.ws.handler.*;
-import com.google.gson.Gson;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,130 +38,39 @@ public class OpenAPITests {
         System.out.println(shard);
     }
 
-    private static UUID resumeUUID = null;
-//    @Test
-    void testResume() throws Exception {
-        Intent intents = Intent.register().withCustom(1 << 25).done();
-        // TODO event bus, 可选事件监听
+    @Test
+    void testStandalone() throws Exception {
+        Intent intent = Intent.register().withAll().done();
         ChainHandler chainHandler = ChainHandler.builder()
                 .append(new ErrorCheckHandler())
                 .append(new EventParseHandler())
                 .append(new HeartbeatHandler())
                 .append(new SequenceHandler.Received())
+                .append(new AutoReconnectHandler(wssUrl, uuid -> {
+                    // do sth
+                }))
                 .append(new APICallbackHandler())
-                .append(new ChainHandler() {
-                    // Event ->
+                .append(new EventDispatchHandler(new EventListener<GroupAddRobotEvent>() {
                     @Override
-                    protected Object doHandle(Object o) {
-                        System.out.println(o);
-                        return o;
+                    public void onEvent(GroupAddRobotEvent event) {
+                        Message message = new MessageBuilder()
+//                                .addTemplateMarkdown()
+                                .build();
                     }
-                })
-                .append(new SequenceHandler.Handled()).build();
 
-        QQConnection.connect(wssUrl, chainHandler, context, (uuid) -> {
-            resumeUUID = uuid;
-            WebSocketAPI.newShardSession(intents, uuid, Shard.STANDALONE, null, context);
-            System.out.printf("QQ connection created with uuid-%s%n", uuid);
-
-            try {
-                System.out.println("正在断开连接");
-                QQConnection.CLIENT_GROUPS.find(context.getConnMap().get(uuid).getKey()).close().sync();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
-
-        QQConnection.reconnect(wssUrl, resumeUUID, context, uuid -> {
-            System.out.println("重连成功");
-        });
-    }
-
-//    @Test
-    void testShard() throws Exception {
-        Intent intents = Intent.register().withCustom(1 << 25).done();
-
-        for (Shard shard : Shard.generate(3)) {
-            SERVICE.submit(() -> {
-                ChainHandler chainHandler = ChainHandler.builder()
-                        .append(new ErrorCheckHandler())
-                        .append(new EventParseHandler())
-                        .append(new HeartbeatHandler())
-                        .append(new SequenceHandler.Received())
-                        .append(new APICallbackHandler())
-                        .append(new ChainHandler() {
-                            // Event ->
-                            @Override
-                            protected Object doHandle(Object o) {
-                                System.out.println(o);
-                                return null;
-                            }
-                        })
-                        .append(new SequenceHandler.Handled())
-                        .build();
-
-                try {
-                    QQConnection.connect(wssUrl, chainHandler, context, (uuid) -> {
-                        WebSocketAPI.newShardSession(intents, uuid, shard, null, context);
-                        System.out.printf("QQ connection created with uuid-%s%n", uuid);
-                    });
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-            // TODO 每5s可创建的Session有限
-            Thread.sleep(5000);
-        }
-        Thread.sleep(5000);
-        System.out.println(context);
-    }
-
-    @Test
-    void testOpenAPI() {
-        Message message = new MessageBuilder()
-//                .addLinkedTextListArk(
-//                        "描述111",
-//                        "提示消息2222",
-//                        Arrays.asList(
-//                                new LinkedTextEntry("需求标题：UI问题解决", null),
-//                                new LinkedTextEntry("当前状态\"体验中\"点击下列动作直接扭转状态到：", null),
-//                                new LinkedTextEntry("已评审", null/*"https://qun.qq.com"*/)
-//                        )
-//                )
-                .addText("你好")
-                .setPassive("ROBOT1.0_TyDZbpEruJp-GgVv3PuQUu2iALlIpLCnvEt5VZjMOgXKSestgnr4kjM4RjXpntFudQkZSHKRXbWWdC.bTg1qnw!!", 4)
+                    @Override
+                    public Intent eventIntent() {
+                        return Intent.register().withCustom(1 << 25).done();
+                    }
+                }))
+                .append(new SequenceHandler.Handled())
                 .build();
-        System.out.println(new Gson().toJson(message.getData()));
-//        OpenAPI.sendGroupMessage("D5F67D40DCF78B52E48A36E7EE27B566", message, context.getCertificate());
-    }
 
-    @Test
-    void testIntent() {
-        System.out.println(Intent.register()
-                .withGuilds()
-                .withGuildMembers()
-                .withGuildMessages()
-                .withGuildMessageReactions()
-                .withDirectMessage()
-                .withForumsEvent()
-                .withInteraction()
-                .withMessageAudit()
-                .withForumsEvent()
-                .withAudioAction()
-                .withPublicGuidMessages()
-                .done().getValue());
-   }
-
-    @Test
-    void testInterrupt() throws Exception {
-//        Runnable thread = () -> {
-//            System.out.println("输出" + new Date().getSeconds());
-//        };
-//        ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-//        ScheduledFuture<?> future = service.scheduleAtFixedRate(thread, 0L, 15L, TimeUnit.SECONDS);
-//        Thread.sleep(5000L);
-//        System.out.println("中断输出" + new Date().getSeconds());
-//        future.cancel(true);
+        QQConnection.connect(wssUrl, chainHandler, context,
+                uuid -> WebSocketAPI.newShardSession(intent, uuid, Shard.STANDALONE, null, context),
+                uuid -> {
+                    // do sth
+                });
     }
 
 }

@@ -1,8 +1,8 @@
 package cn.byteforge.openqq.ws.handler;
 
 import cn.byteforge.openqq.ws.entity.enumerate.IntentEnum;
+import cn.byteforge.openqq.ws.event.Event;
 import cn.byteforge.openqq.ws.event.EventListener;
-import cn.byteforge.openqq.ws.event.type.MessageEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
@@ -13,22 +13,19 @@ import java.util.stream.Collectors;
  * 消息事件分发处理
  * */
 @Slf4j
-public class MessageEventDispatchHandler extends ChainHandler {
+public class EventDispatchHandler extends ChainHandler {
 
-    private final EventListener<? extends MessageEvent>[] listeners;
+    private final EventListener<? extends Event>[] listeners;
 
     @SafeVarargs
-    public MessageEventDispatchHandler(EventListener<? extends MessageEvent> ...listeners) {
+    public EventDispatchHandler(EventListener<? extends Event> ...listeners) {
         this.listeners = listeners;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
     protected Object doHandle(Object o) {
-        if (!(o instanceof MessageEvent)) {
-            return o;
-        }
-        MessageEvent event = (MessageEvent) o;
+        Event event = (Event) o;
         String eventType = event.getEventType();
         Optional<IntentEnum> optional = Arrays.stream(IntentEnum.values())
                 .filter(type -> type.name().equals(eventType))

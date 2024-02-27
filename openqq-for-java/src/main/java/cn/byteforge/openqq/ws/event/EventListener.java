@@ -1,12 +1,11 @@
 package cn.byteforge.openqq.ws.event;
 
 import cn.byteforge.openqq.ws.entity.Intent;
-import cn.byteforge.openqq.ws.event.type.MessageEvent;
 
 /**
  * 事件监听接口
  * */
-public interface EventListener<T extends MessageEvent> {
+public interface EventListener<T extends Event> {
 
     /**
      * 监听事件

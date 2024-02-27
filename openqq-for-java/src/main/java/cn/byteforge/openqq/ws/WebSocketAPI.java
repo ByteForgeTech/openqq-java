@@ -3,9 +3,9 @@ package cn.byteforge.openqq.ws;
 import cn.byteforge.openqq.Global;
 import cn.byteforge.openqq.util.Maps;
 import cn.byteforge.openqq.ws.entity.Intent;
-import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import cn.byteforge.openqq.ws.entity.Session;
 import cn.byteforge.openqq.ws.entity.Shard;
+import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import cn.byteforge.openqq.ws.event.EventType;
 import cn.byteforge.openqq.ws.handler.APICallbackHandler;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
@@ -65,7 +65,7 @@ public class WebSocketAPI {
                 )
         ), uuid, EventType.READY, context);
         Session session = EventParseHandler.GSON.fromJson(future.join(), Session.class);
-        Assert.isNull(context.getSessionMap().put(uuid, session), "If you want to resume session, please use WebSocketAPI#resumeSession");
+        Assert.isNull(context.getSessionMap().containsKey(uuid), "If you want to resume session, please use WebSocketAPI#resumeSession");
         return session;
     }
 

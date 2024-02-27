@@ -1,5 +1,6 @@
 package cn.byteforge.openqq.ws;
 
+import cn.byteforge.openqq.ws.entity.Session;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -28,6 +29,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * 状态维护、登录鉴权、心跳维护、断线恢复重连
@@ -46,7 +48,7 @@ public class QQConnection {
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
     public static void reconnect(String wssUrl, UUID uuid, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
-        doConnect(wssUrl, null, context, uuid, (id) -> {
+        doConnect(wssUrl, null, context, null, uuid, (id) -> {
             WebSocketAPI.resumeSession(uuid, context);
             if (callback == null) return;
             callback.accept(id);
@@ -60,11 +62,21 @@ public class QQConnection {
      * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
-    public static void connect(String wssUrl, ChainHandler chainHandler, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
-        doConnect(wssUrl, chainHandler, context, null, callback);
+    public static void connect(String wssUrl, ChainHandler chainHandler, BotContext context, Function<UUID, Session> sessionFunction, @Nullable Consumer<UUID> callback) throws InterruptedException {
+        doConnect(wssUrl, chainHandler, context, sessionFunction, null, callback);
     }
 
-    private static void doConnect(String url, @Nullable ChainHandler chainHandler, BotContext context, @Nullable UUID uuid, @Nullable Consumer<UUID> callback) throws InterruptedException {
+    /**
+     * @apiNote connect 需要绑定 session 和 chainHandler，reconnect 需要根据 uuid 刷新 channel
+     * */
+    private static void doConnect(
+            String url,
+            @Nullable ChainHandler chainHandler,
+            BotContext context,
+            @Nullable Function<UUID, Session> sessionFunction,
+            @Nullable UUID uuid,
+            @Nullable Consumer<UUID> callback
+    ) throws InterruptedException {
         EventChannelHandler eventHandler = new EventChannelHandler(getChainHandler(chainHandler, uuid, context));
         EventLoopGroup group = new NioEventLoopGroup();
         try {
@@ -111,6 +123,7 @@ public class QQConnection {
                     next.setMetaData(uuid, context);
                     next = next.next();
                 }
+                if (sessionFunction != null) context.getSessionMap().put(uuid, sessionFunction.apply(uuid));
             }
             if (callback != null) callback.accept(uuid);
             channel.closeFuture().sync();
