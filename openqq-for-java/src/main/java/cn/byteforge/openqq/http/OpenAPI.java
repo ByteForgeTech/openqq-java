@@ -13,7 +13,7 @@ import cn.hutool.http.Method;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
@@ -100,7 +100,7 @@ public class OpenAPI {
         return getAuthResponse("https://api.sgroup.qq.com/gateway/bot", null, Method.GET, cert, RecommendShard.class);
     }
 
-    private static <T> T getAuthResponse(String url, @NotNull Map<String, Object> data, Method method, Certificate cert, Class<T> clazz) {
+    private static <T> T getAuthResponse(String url, @Nullable Map<String, Object> data, Method method, Certificate cert, Class<T> clazz) {
         return getResponse(url, data, method, clazz, Maps.of(
                 "Authorization", String.format(Global.Authorization, cert.getAccessToken().getContent()),
                 "X-Union-Appid", cert.getAppId()
@@ -111,21 +111,22 @@ public class OpenAPI {
      * <a href="https://bot.q.qq.com/wiki/develop/api-v2/dev-prepare/error-trace/openapi.html">错误码介绍</a>
      * */
     private static <T> T getResponse(String url, Map<String, Object> data, Method method, Class<T> clazz, Map<String, String> headers) {
+        String body = GSON.toJson(data);
         try (HttpResponse response = HttpRequest.of(url)
                 .method(method)
                 .timeout(HttpGlobalConfig.getTimeout())
-                .body(GSON.toJson(data))
+                .body(body)
                 .headerMap(headers, true)
                 .execute())
         {
             // {"message":"send msg err","code":22013,"err_code":22013,"trace_id":"eaab6442592c90cffa1ca71ce5f7c670"}
             Status.Http httpStatus = Status.Http.parse(response.getStatus());
             if (!httpStatus.isSuccess() && response.bodyBytes().length == 0) {
-                throw new APIInvokeException(httpStatus.getCode(), httpStatus.getMessage(), data);
+                throw new APIInvokeException(httpStatus.getCode(), httpStatus.getMessage(), body);
             }
             JsonObject object = GSON.fromJson(response.body(), JsonObject.class);
             if (object.has("code")) {
-                throw new APIInvokeException(object.get("code").getAsInt(), object.get("message").getAsString(), data);
+                throw new APIInvokeException(object.get("code").getAsInt(), object.get("message").getAsString(), body);
             }
             return GSON.fromJson(object, clazz);
         }

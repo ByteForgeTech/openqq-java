@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * 序列号处理
- * TODO 多连接序列记录
  * */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class SequenceHandler {

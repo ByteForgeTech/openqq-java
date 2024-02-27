@@ -1,6 +1,7 @@
 package cn.byteforge.openqq.message;
 
 import cn.byteforge.openqq.exception.ConflictMessageTypeException;
+import cn.byteforge.openqq.http.entity.entry.KeyValueEntry;
 import cn.byteforge.openqq.http.entity.entry.LinkedTextEntry;
 import cn.byteforge.openqq.util.Maps;
 import com.google.gson.JsonArray;
@@ -60,7 +61,10 @@ public class MessageBuilder {
     public MessageBuilder addTemplateMarkdown(String templateId, List<?> keyValues) {
         data.put("markdown", Maps.of(
                 "custom_template_id", templateId,
-                "params", keyValues
+                "params", keyValues,
+                "keyboard", Maps.of(
+                        "id", templateId
+                )
         ));
         updateMsgType(MessageType.MARKDOWN);
         return this;
@@ -71,9 +75,7 @@ public class MessageBuilder {
      * @param content 原生 markdown 文本内容
      * */
     public MessageBuilder addCustomMarkdown(String content) {
-        data.put("markdown", Maps.of(
-                "content", content
-        ));
+        data.put("markdown", new KeyValueEntry("content", content));
         updateMsgType(MessageType.MARKDOWN);
         return this;
     }
@@ -87,14 +89,14 @@ public class MessageBuilder {
         List<Map<String, Object>> obj = new LinkedList<>();
         for (LinkedTextEntry entry : entryList) {
             obj.add(Maps.of("obj_kv", Arrays.asList(
-                    Maps.of("key", "desc", "value", entry.getDesc()),
-                    Maps.of("key", "link", "value", entry.getLink())
+                    new KeyValueEntry("desc", entry.getDesc()),
+                    new KeyValueEntry("link", entry.getLink())
             )));
         }
         return addArk(23, Arrays.asList(
-                Maps.of("key", "#DESC#", "value", desc),
-                Maps.of("key", "#PROMPT#", "value", prompt),
-                Maps.of("key", "#LIST#", "obj", obj)
+                new KeyValueEntry("#DESC#", desc),
+                new KeyValueEntry("#PROMPT#", prompt),
+                new KeyValueEntry("#LIST#", obj)
         ));
     }
 
@@ -107,16 +109,17 @@ public class MessageBuilder {
      * @param img 图片链接
      * @param link 跳转链接
      * @param subTitle 来源
+     * @deprecated 该模板不允许发送 url
      * */
     public MessageBuilder addSmallPicArk(String desc, String prompt, String title, String metaDesc, String img, String link, String subTitle) {
         return addArk(24, Arrays.asList(
-                Maps.of("key", "#DESC#", "value", desc),
-                Maps.of("key", "#PROMPT#", "value", prompt),
-                Maps.of("key", "#TITLE#", "value", title),
-                Maps.of("key", "#METADESC#", "value", metaDesc),
-                Maps.of("key", "#IMG#", "value", img),
-                Maps.of("key", "#LINK#", "value", link),
-                Maps.of("key", "#SUBTITLE#", "value", subTitle)
+                new KeyValueEntry("#DESC#", desc),
+                new KeyValueEntry("#PROMPT#", prompt),
+                new KeyValueEntry("#TITLE#", title),
+                new KeyValueEntry("#METADESC#", metaDesc),
+                new KeyValueEntry("#IMG#", img),
+                new KeyValueEntry("#LINK#", link),
+                new KeyValueEntry("#SUBTITLE#", subTitle)
         ));
     }
 
@@ -127,14 +130,16 @@ public class MessageBuilder {
      * @param metaSubTitle 子标题
      * @param metaCover 大图，尺寸为 975*540
      * @param metaAurl 跳转链接
+     * @deprecated 该模板不允许发送 url
      * */
+    @Deprecated
     public MessageBuilder addBigPicArk(String prompt, String metaTitle, String metaSubTitle, String metaCover, String metaAurl) {
         return addArk(37, Arrays.asList(
-                Maps.of("key", "#PROMPT#", "value", prompt),
-                Maps.of("key", "#METATITLE#", "value", metaTitle),
-                Maps.of("key", "#METASUBTITLE#", "value", metaSubTitle),
-                Maps.of("key", "#METACOVER#", "value", metaCover),
-                Maps.of("key", "#METAURL#", "value", metaAurl)
+               new KeyValueEntry("#PROMPT#", prompt),
+               new KeyValueEntry("#METATITLE#", metaTitle),
+               new KeyValueEntry("#METASUBTITLE#", metaSubTitle),
+               new KeyValueEntry("#METACOVER#", metaCover),
+               new KeyValueEntry("#METAURL#", metaAurl)
         ));
     }
 
@@ -225,6 +230,9 @@ public class MessageBuilder {
             return;
         }
         if ((int) recordType == msgType) return;
+        // expose media+text
+        if (msgType == MessageType.TEXT && (int) recordType == MessageType.MEDIA) return;
+        if ((int) recordType == MessageType.TEXT && msgType == MessageType.MEDIA) return;
         throw new ConflictMessageTypeException(msgType, (int) recordType);
     }
 

@@ -1,12 +1,15 @@
 package cn.byteforge.openqq.ws.handler;
 
 import cn.byteforge.openqq.ws.BotContext;
+import cn.byteforge.openqq.ws.event.Event;
+import cn.byteforge.openqq.ws.event.EventListener;
 import cn.hutool.core.lang.Assert;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * 链式处理抽象类
@@ -77,6 +80,20 @@ public abstract class ChainHandler {
      * */
     protected ChainHandler setNext(ChainHandler handler) {
         return this.nextHandler = handler;
+    }
+
+    @SafeVarargs
+    public static ChainHandler defaultChainGroup(String wssUrl, @Nullable Consumer<UUID> reconnectCallback, EventListener<? extends Event> ...listeners) {
+        return builder()
+                .append(new ErrorCheckHandler())
+                .append(new EventParseHandler())
+                .append(new HeartbeatHandler())
+                .append(new SequenceHandler.Received())
+                .append(new AutoReconnectHandler(wssUrl, reconnectCallback))
+                .append(new APICallbackHandler())
+                .append(new EventDispatchHandler(listeners))
+                .append(new SequenceHandler.Handled())
+                .build();
     }
 
     public static Builder builder() {

@@ -65,7 +65,7 @@ public class WebSocketAPI {
                 )
         ), uuid, EventType.READY, context);
         Session session = EventParseHandler.GSON.fromJson(future.join(), Session.class);
-        Assert.isNull(context.getSessionMap().containsKey(uuid), "If you want to resume session, please use WebSocketAPI#resumeSession");
+        Assert.isFalse(context.getSessionMap().containsKey(uuid), "If you want to resume session, please use WebSocketAPI#resumeSession");
         return session;
     }
 
@@ -83,7 +83,7 @@ public class WebSocketAPI {
                 "d", Maps.of(
                         "token", String.format(Global.Authorization, context.getCertificate().getAccessToken().getContent()),
                         "session_id", oldSession.getSessionId(),
-                        "seq", context.getReceivedSeqMap().get(uuid)
+                        "seq", context.getHandledSeqMap().get(uuid)
                 )
         ), uuid, EventType.RESUMED, context);
         future.join();

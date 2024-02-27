@@ -1,16 +1,20 @@
 import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.AccessToken;
+import cn.byteforge.openqq.http.entity.FileInfo;
 import cn.byteforge.openqq.http.entity.RecommendShard;
-import cn.byteforge.openqq.message.Message;
+import cn.byteforge.openqq.http.entity.UploadFileType;
+import cn.byteforge.openqq.http.entity.entry.KeyValuesEntry;
 import cn.byteforge.openqq.message.MessageBuilder;
 import cn.byteforge.openqq.model.Certificate;
+import cn.byteforge.openqq.util.Maps;
 import cn.byteforge.openqq.ws.BotContext;
 import cn.byteforge.openqq.ws.QQConnection;
 import cn.byteforge.openqq.ws.WebSocketAPI;
 import cn.byteforge.openqq.ws.entity.Intent;
 import cn.byteforge.openqq.ws.entity.Shard;
+import cn.byteforge.openqq.ws.entity.data.GroupAtMessageData;
 import cn.byteforge.openqq.ws.event.EventListener;
-import cn.byteforge.openqq.ws.event.type.group.GroupAddRobotEvent;
+import cn.byteforge.openqq.ws.event.type.group.*;
 import cn.byteforge.openqq.ws.handler.*;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -41,30 +45,36 @@ public class OpenAPITests {
     @Test
     void testStandalone() throws Exception {
         Intent intent = Intent.register().withAll().done();
-        ChainHandler chainHandler = ChainHandler.builder()
-                .append(new ErrorCheckHandler())
-                .append(new EventParseHandler())
-                .append(new HeartbeatHandler())
-                .append(new SequenceHandler.Received())
-                .append(new AutoReconnectHandler(wssUrl, uuid -> {
-                    // do sth
-                }))
-                .append(new APICallbackHandler())
-                .append(new EventDispatchHandler(new EventListener<GroupAddRobotEvent>() {
+        ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
+                new EventListener<GroupAtMessageEvent>() {
+            @Override
+            public void onEvent(GroupAtMessageEvent event) {
+                GroupAtMessageData data = event.getData();
+                FileInfo fileInfo = OpenAPI.uploadGroupFile(data.getGroupId(), "https://ubot.byteforge.cn/static/bg.png", false, UploadFileType.IMAGE, context.getCertificate());
+                OpenAPI.sendGroupMessage(data.getGroupId(), new MessageBuilder()
+                        .setPassive(data.getId())
+                        .build(), context.getCertificate());
+            }
+
+            @Override
+            public Intent eventIntent() {
+                return Intent.register().withCustom(1 << 25).done();
+            }
+        },
+                new EventListener<GroupMsgRejectEvent>() {
                     @Override
-                    public void onEvent(GroupAddRobotEvent event) {
-                        Message message = new MessageBuilder()
-//                                .addTemplateMarkdown()
-                                .build();
+                    public void onEvent(GroupMsgRejectEvent event) {
+        //                        Message message = new MessageBuilder()
+        ////                                .addTemplateMarkdown()
+        //                                .build();
+                        System.out.println("已被群组禁言：" + event);
                     }
 
                     @Override
                     public Intent eventIntent() {
-                        return Intent.register().withCustom(1 << 25).done();
+                        return Intent.register().withAll().done();
                     }
-                }))
-                .append(new SequenceHandler.Handled())
-                .build();
+        });
 
         QQConnection.connect(wssUrl, chainHandler, context,
                 uuid -> WebSocketAPI.newShardSession(intent, uuid, Shard.STANDALONE, null, context),

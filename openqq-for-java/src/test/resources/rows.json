@@ -1,0 +1,78 @@
+{
+  "rows": [
+    {
+      "buttons": [
+        {
+          "id": "1",
+          "render_data": {
+            "label": "⬅️上一页",
+            "visited_label": "⬅️上一页"
+          },
+          "action": {
+            "type": 1,
+            "permission": {
+              "type": 1,
+              "specify_role_ids": [
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "click_limit": 10,
+            "unsupport_tips": "兼容文本",
+            "data": "data",
+            "at_bot_show_channel_list": true
+          }
+        },
+        {
+          "id": "2",
+          "render_data": {
+            "label": "➡️下一页",
+            "visited_label": "➡️下一页"
+          },
+          "action": {
+            "type": 1,
+            "permission": {
+              "type": 1,
+              "specify_role_ids": [
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "click_limit": 10,
+            "unsupport_tips": "兼容文本",
+            "data": "data",
+            "at_bot_show_channel_list": true
+          }
+        }
+      ]
+    },
+    {
+      "buttons": [
+        {
+          "id": "3",
+          "render_data": {
+            "label": "📅 打卡（5）",
+            "visited_label": "📅 打卡（5）"
+          },
+          "action": {
+            "type": 1,
+            "permission": {
+              "type": 1,
+              "specify_role_ids": [
+                "1",
+                "2",
+                "3"
+              ]
+            },
+            "click_limit": 10,
+            "unsupport_tips": "兼容文本",
+            "data": "data",
+            "at_bot_show_channel_list": true
+          }
+        }
+      ]
+    }
+  ]
+}
