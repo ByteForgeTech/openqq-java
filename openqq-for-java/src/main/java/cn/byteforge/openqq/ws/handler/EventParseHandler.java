@@ -5,6 +5,7 @@ import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import cn.byteforge.openqq.ws.event.Event;
 import cn.byteforge.openqq.ws.event.type.friend.*;
 import cn.byteforge.openqq.ws.event.type.group.*;
+import cn.byteforge.openqq.ws.event.type.interact.InteractionEvent;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
@@ -42,6 +43,7 @@ public class EventParseHandler extends ChainHandler {
 
     static {
         TYPE_EVENT_MAP = new HashMap<>();
+        TYPE_EVENT_MAP.put("INTERACTION_CREATE", InteractionEvent.class);
         TYPE_EVENT_MAP.putAll(Maps.of(
                 "C2C_MESSAGE_CREATE", C2CMessageEvent.class,
                 "GROUP_AT_MESSAGE_CREATE", GroupAtMessageEvent.class

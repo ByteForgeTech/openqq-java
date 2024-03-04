@@ -4,6 +4,7 @@ import cn.byteforge.openqq.exception.ConflictMessageTypeException;
 import cn.byteforge.openqq.http.entity.entry.KeyValueEntry;
 import cn.byteforge.openqq.http.entity.entry.LinkedTextEntry;
 import cn.byteforge.openqq.util.Maps;
+import cn.hutool.core.lang.Assert;
 import com.google.gson.JsonArray;
 import org.jetbrains.annotations.Nullable;
 
@@ -76,6 +77,20 @@ public class MessageBuilder {
      * */
     public MessageBuilder addCustomMarkdown(String content) {
         data.put("markdown", new KeyValueEntry("content", content));
+        updateMsgType(MessageType.MARKDOWN);
+        return this;
+    }
+
+    /**
+     * 从模版发送 Markdown 按钮消息
+     * @param templateId markdown 按钮模版id，申请按钮模版后获得
+     * @apiNote 按钮模板消息不能与markdown消息混合使用
+     * */
+    public MessageBuilder addTemplateMarkdownButton(String templateId) {
+        Assert.isNull(data.remove("markdown"), "Button template messages cannot be mixed with markdown messages");
+        data.put("keyboard", Maps.of(
+                "id", templateId
+        ));
         updateMsgType(MessageType.MARKDOWN);
         return this;
     }

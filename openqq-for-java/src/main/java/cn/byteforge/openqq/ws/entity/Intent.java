@@ -56,6 +56,9 @@ public class Intent {
             return this;
         }
 
+        /**
+         * Markdown 按钮点击回调事件监听
+         * */
         public Register withInteraction() {
             intents = intents | (1 << 26);
             return this;

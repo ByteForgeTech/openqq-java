@@ -1,6 +1,6 @@
-package cn.byteforge.openqq.ws.event.type;
+package cn.byteforge.openqq.ws.event.type.interact;
 
-import cn.byteforge.openqq.ws.entity.data.MessageData;
+import cn.byteforge.openqq.ws.entity.data.InteractionData;
 import cn.byteforge.openqq.ws.event.Event;
 import com.google.gson.Gson;
 import lombok.Data;
@@ -8,12 +8,12 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
- * 消息事件
+ * Markdown 按钮交互事件
  * */
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @Data
-public abstract class MessageEvent extends Event {
+public class InteractionEvent extends Event {
 
     /**
      * 事件ID
@@ -23,8 +23,9 @@ public abstract class MessageEvent extends Event {
     /**
      * 获取事件字段数据
      * */
-    public MessageData getData() {
-        return new Gson().fromJson(getD(), MessageData.class);
+    public InteractionData getData() {
+        return new Gson().fromJson(getD(), InteractionData.class);
     }
+
 
 }

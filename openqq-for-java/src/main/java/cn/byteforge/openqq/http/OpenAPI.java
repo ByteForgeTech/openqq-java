@@ -13,6 +13,7 @@ import cn.hutool.http.Method;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -21,6 +22,7 @@ import java.util.Map;
  * QQ 机器人 服务端开放的 openapi 接口对接
  * */
 // TODO 更改url储存位置
+@Slf4j
 public class OpenAPI {
 
     private static final Gson GSON = new GsonBuilder().create();
@@ -112,6 +114,7 @@ public class OpenAPI {
      * */
     private static <T> T getResponse(String url, Map<String, Object> data, Method method, Class<T> clazz, Map<String, String> headers) {
         String body = GSON.toJson(data);
+        log.debug("Send json object to url: {}, json: {}", url, body);
         try (HttpResponse response = HttpRequest.of(url)
                 .method(method)
                 .timeout(HttpGlobalConfig.getTimeout())
@@ -119,7 +122,6 @@ public class OpenAPI {
                 .headerMap(headers, true)
                 .execute())
         {
-            // {"message":"send msg err","code":22013,"err_code":22013,"trace_id":"eaab6442592c90cffa1ca71ce5f7c670"}
             Status.Http httpStatus = Status.Http.parse(response.getStatus());
             if (!httpStatus.isSuccess() && response.bodyBytes().length == 0) {
                 throw new APIInvokeException(httpStatus.getCode(), httpStatus.getMessage(), body);
