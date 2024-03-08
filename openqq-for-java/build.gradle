@@ -1,9 +1,16 @@
 plugins {
     id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
 }
 
 group 'cn.byteforge.openqq'
-version '1.0.0-SNAPSHOT'
+version '0.1.0'
+
+[compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 
 repositories {
     mavenLocal()
@@ -27,4 +34,116 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
+    classifier = 'sources'
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
+}
+
+tasks.withType(Jar).configureEach { task ->
+    task.doLast {
+        ant.checksum algorithm: 'md5', file: it.archivePath
+        ant.checksum algorithm: 'sha1', file: it.archivePath
+    }
+}
+
+javadoc {
+    description = "生成jar格式的javadoc。"
+    // 只显示 protected 和 public 的类和成员
+    options.memberLevel = JavadocMemberLevel.PROTECTED
+    options.author = true
+    options.version = true
+    options.header = project.name
+    // 静默javadoc检查（比如不支持@date会报错等），jdk 8+
+    options.addStringOption('Xdoclint:none', '-quiet')
+    /**
+     * <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+     * 防止本地打开中文乱码
+     */
+    options.addStringOption("charset", "UTF-8")
+    // suppress warnings due to cross-module @see and @link references;
+    // note that global 'api' task does display all warnings.
+    logging.captureStandardError LogLevel.INFO
+    // suppress "## warnings" message
+    logging.captureStandardOutput LogLevel.INFO
+    // 编码一定要配置否则直接出错
+    options.encoding = "UTF-8"
+    options.charSet = "UTF-8"
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            /** 默认使用项目的group/name/version信息 */
+            /**
+             groupId = ''
+             artifactId = ''
+             version = ''
+             */
+            /**
+             * 如果是war包填写components.web，
+             * 如果是jar包填写components.java,
+             * 不过该方法没有manifest信息(会自动附带pom依赖信息)
+             */
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                name = project.name
+                description = 'openqq-protocol 是在与官方qq机器人协议对接的基础上，额外onebot、satori等社区协议进行的适配sdk实现。'
+                url = 'https://github.com/IUnlimit/openqq-protocol'
+                licenses {
+                    license {
+                        name = 'AGPLv3'
+                        url = 'https://www.gnu.org/licenses/agpl-3.0'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'IllTamer'
+                        email = 'mail@illtamer.com'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/IUnlimit/openqq-protocol'
+                    connection = 'scm:git:https://github.com/IUnlimit/openqq-protocol.git'
+                }
+            }
+        }
+    }
+
+    repositories {
+        // 发布到oss sonatype,非SNAPSHOT版必须GPG签名
+        maven {
+            name = 'oss'
+            url = oss_sonatype_maven_url
+            credentials {
+                username oss_sonatype_maven_username
+                password oss_sonatype_maven_password
+            }
+        }
+        // oss snapshot 仓库，必须携带 -SNAPSHOT 后缀
+        maven {
+            name = 'oss-snapshot'
+            url = oss_sonatype_snapshot_maven_url
+            credentials {
+                username = oss_sonatype_maven_username
+                password = oss_sonatype_maven_password
+            }
+        }
+    }
+
+    /**
+     * GPG 签名jar包配置，注意顺序，必须在 publishing 配置之后
+     * （因为使用了 publishing 中定义的 mavenJava）
+     */
+    signing {
+        sign publishing.publications.mavenJava
+    }
 }
