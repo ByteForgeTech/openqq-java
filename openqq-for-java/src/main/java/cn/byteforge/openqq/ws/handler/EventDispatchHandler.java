@@ -43,6 +43,7 @@ public class EventDispatchHandler extends ChainHandler {
         for (EventListener listener : Arrays.stream(listeners)
                 .filter(l -> (l.eventIntent().getValue() & intent) != 0)
                 .collect(Collectors.toList())) {
+            if (listener.ignoreCancelled() && event.isCancelled()) continue;
             try {
                 Class<? extends Event> listenedEventType = getListenedEventType(listener);
                 Assert.notNull(listenedEventType);

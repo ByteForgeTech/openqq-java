@@ -18,4 +18,11 @@ public interface EventListener<T extends Event> {
      * */
     Intent eventIntent();
 
+    /**
+     * 是否忽略被取消的事件
+     * */
+    default boolean ignoreCancelled() {
+        return true;
+    }
+
 }
