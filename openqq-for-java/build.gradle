@@ -6,7 +6,7 @@ plugins {
 }
 
 group 'cn.byteforge.openqq'
-version '0.1.0'
+version '0.1.1'
 
 [compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
 sourceCompatibility = 1.8
