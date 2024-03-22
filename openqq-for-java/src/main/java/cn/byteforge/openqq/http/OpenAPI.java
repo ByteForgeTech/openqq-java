@@ -74,6 +74,18 @@ public class OpenAPI {
     }
 
     /**
+     * 回调 QQ 后台，告知交互事件已经收到
+     * @param interactionId 事件 data.id
+     * @param result 交互结果
+     * @param cert 访问凭证
+     * */
+    public static void callbackInteraction(String interactionId, InteractResult result, Certificate cert) {
+        getAuthResponse(String.format("https://api.sgroup.qq.com/interactions/%s", interactionId), Maps.of(
+                "code", result.getCode()
+        ), Method.PUT, cert, JsonObject.class);
+    }
+
+    /**
      * 获取调用凭证
      * @param appId 在开放平台管理端上获得。
      * @param clientSecret 在开放平台管理端上获得。
@@ -127,6 +139,7 @@ public class OpenAPI {
                 throw new APIInvokeException(httpStatus.getCode(), httpStatus.getMessage(), body);
             }
             JsonObject object = GSON.fromJson(response.body(), JsonObject.class);
+            if (object == null) return null;
             if (object.has("code")) {
                 throw new APIInvokeException(object.get("code").getAsInt(), object.get("message").getAsString(), body);
             }
