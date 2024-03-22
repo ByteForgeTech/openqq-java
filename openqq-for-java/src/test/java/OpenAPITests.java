@@ -49,7 +49,7 @@ public class OpenAPITests {
                 new EventListener<GroupAtMessageEvent>() {
             @Override
             public void onEvent(GroupAtMessageEvent event) {
-                GroupAtMessageData data = event.getData();
+                GroupAtMessageData data = event.getD();
                 FileInfo fileInfo = OpenAPI.uploadGroupFile(data.getGroupId(), "https://ubot.byteforge.cn/static/bg.png", false, UploadFileType.IMAGE, context.getCertificate());
                 OpenAPI.sendGroupMessage(data.getGroupId(), new MessageBuilder()
                         .setPassive(data.getId())
