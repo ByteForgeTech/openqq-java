@@ -4,7 +4,6 @@ import cn.byteforge.openqq.ws.BotContext;
 import com.google.gson.JsonObject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 
 /**

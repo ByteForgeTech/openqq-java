@@ -4,7 +4,6 @@ import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.InteractResult;
 import cn.byteforge.openqq.ws.entity.data.InteractionData;
 import cn.byteforge.openqq.ws.event.Event;
-import com.google.gson.Gson;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

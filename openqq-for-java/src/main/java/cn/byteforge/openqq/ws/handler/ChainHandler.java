@@ -82,6 +82,10 @@ public abstract class ChainHandler {
         return this.nextHandler = handler;
     }
 
+    /**
+     * 创建默认链式调用组
+     * @apiNote 默认链式调用组不保证线程安全，请自行注意
+     * */
     @SafeVarargs
     public static ChainHandler defaultChainGroup(String wssUrl, @Nullable Consumer<UUID> reconnectCallback, EventListener<? extends Event> ...listeners) {
         return builder()

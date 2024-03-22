@@ -6,7 +6,6 @@ import cn.byteforge.openqq.ws.event.EventListener;
 import cn.hutool.core.lang.Assert;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;

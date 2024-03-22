@@ -4,7 +4,7 @@ import cn.byteforge.openqq.exception.ConflictMessageTypeException;
 import cn.byteforge.openqq.http.entity.entry.KeyValueEntry;
 import cn.byteforge.openqq.http.entity.entry.LinkedTextEntry;
 import cn.byteforge.openqq.util.Maps;
-import cn.hutool.core.lang.Assert;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,6 +48,16 @@ public class MessageBuilder {
     /**
      * 从消息模版发送 Markdown 消息
      * @param templateId markdown 模版id，申请模版后获得
+     * @param keyValuesJson {key: xxx, values: xxx}，模版内变量与填充值的kv映射
+     * */
+    public MessageBuilder addTemplateMarkdown(String templateId, String keyValuesJson) {
+        JsonArray keyValues = new Gson().fromJson(keyValuesJson, JsonArray.class);
+        return addTemplateMarkdown(templateId, keyValues.asList());
+    }
+
+    /**
+     * 从消息模版发送 Markdown 消息
+     * @param templateId markdown 模版id，申请模版后获得
      * @param keyValues {key: xxx, values: xxx}，模版内变量与填充值的kv映射
      * */
     public MessageBuilder addTemplateMarkdown(String templateId, JsonArray keyValues) {
@@ -85,11 +95,29 @@ public class MessageBuilder {
      * 从模版发送 Markdown 按钮消息
      * @param templateId markdown 按钮模版id，申请按钮模版后获得
      * @apiNote 按钮模板消息不能与markdown消息混合使用
+     * @deprecated 官方暂未支持根据模版发送 markdown 按钮消息（缺少字段）
      * */
+    @Deprecated
     public MessageBuilder addTemplateMarkdownButton(String templateId) {
-        Assert.isNull(data.remove("markdown"), "Button template messages cannot be mixed with markdown messages");
         data.put("keyboard", Maps.of(
                 "id", templateId
+        ));
+        updateMsgType(MessageType.MARKDOWN);
+        return this;
+    }
+
+    /**
+     * 发送自定义 Markdown 按钮消息
+     * @param rowsJson 传入 rows 字段对应的值 "rows": [...]
+     * @apiNote 自定义按钮消息可以与 markdown 模板混合使用
+     * */
+    public MessageBuilder addCustomMarkdownButton(String rowsJson, String appId) {
+        JsonArray rows = new Gson().fromJson(rowsJson, JsonArray.class);
+        data.put("keyboard", Maps.of(
+                "content", Maps.of(
+                        "rows", rows,
+                        "bot_appid", appId
+                )
         ));
         updateMsgType(MessageType.MARKDOWN);
         return this;
@@ -230,6 +258,14 @@ public class MessageBuilder {
 //    public MessageBuilder addFace() {
 //
 //    }
+
+    /**
+     * 添加消息实体
+     * */
+    public MessageBuilder addMessage(Message message) {
+        data.putAll(message.getData());
+        return this;
+    }
 
     /**
      * 构建消息

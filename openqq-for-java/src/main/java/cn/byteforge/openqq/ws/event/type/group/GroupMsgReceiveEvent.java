@@ -2,7 +2,6 @@ package cn.byteforge.openqq.ws.event.type.group;
 
 import cn.byteforge.openqq.ws.entity.data.GroupOpRobotData;
 import cn.byteforge.openqq.ws.event.Event;
-import com.google.gson.Gson;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -16,10 +15,8 @@ import lombok.ToString;
 public class GroupMsgReceiveEvent extends Event {
 
     /**
-     * 获取事件字段数据
+     * 事件字段数据
      * */
-    public GroupOpRobotData getData() {
-        return new Gson().fromJson(getD(), GroupOpRobotData.class);
-    }
+    private GroupOpRobotData d;
 
 }

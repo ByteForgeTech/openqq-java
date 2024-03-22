@@ -2,7 +2,6 @@ package cn.byteforge.openqq.ws.handler;
 
 import cn.byteforge.openqq.task.HeartbeatRunnable;
 import cn.byteforge.openqq.ws.event.Event;
-import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Executors;
@@ -35,7 +34,7 @@ public class HeartbeatHandler extends ChainHandler {
                     log.info("Duplicate heartbeat thread detected, is this connection reconnect ?");
                 }
                 // start to heartbeat
-                long interval = ((JsonObject) event.getD()).get("heartbeat_interval").getAsLong();
+                long interval = event.getJson().getAsJsonObject("d").get("heartbeat_interval").getAsLong();
                 // ScheduledExecutor leaves 20% of the interval to avoid errors
                 interval -= (interval / 10) * 2;
                 scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getUuid(), getContext()), interval, interval, TimeUnit.MILLISECONDS);

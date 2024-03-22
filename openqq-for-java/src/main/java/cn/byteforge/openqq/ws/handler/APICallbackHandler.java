@@ -41,7 +41,7 @@ public class APICallbackHandler extends ChainHandler {
         Event event = (Event) o;
         switch (event.getEventType()) {
             case EventType.READY: {
-                dataMap.get(EventType.READY).put((JsonObject) event.getD());
+                dataMap.get(EventType.READY).put(event.getJson().getAsJsonObject("d"));
                 return null;
             }
             case EventType.RESUMED: {

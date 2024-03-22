@@ -31,6 +31,13 @@ public class EventParseHandler extends ChainHandler {
     // JsonObject -> Event
     @Override
     protected Event doHandle(Object object) {
+        Event event = parse(object);
+        event.setContext(getContext());
+        event.setJson((JsonObject) object);
+        return event;
+    }
+
+    private Event parse(Object object) {
         JsonObject json = (JsonObject) object;
         if (json.has("t")) {
             Class<? extends Event> type = TYPE_EVENT_MAP.get(json.get("t").getAsString());
