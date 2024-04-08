@@ -15,15 +15,14 @@ public class ErrorCheckHandler extends ChainHandler {
     // JsonObject -> JsonObject
     @Override
     protected Object doHandle(Object object) {
-        throw new ErrorCheckException(OpCode.INVALID_SESSION);
-//        JsonObject json = (JsonObject) object;
-//        // https://bot.q.qq.com/wiki/develop/api-v2/dev-prepare/error-trace/websocket.html
-//        if (json.has("code")) {
-//            throw new WebSocketInvokeException(object);
-//        } else if (json.get("op").getAsInt() == OpCode.INVALID_SESSION.getCode()) {
-//            throw new ErrorCheckException(OpCode.INVALID_SESSION);
-//        }
-//        return json;
+        JsonObject json = (JsonObject) object;
+        // https://bot.q.qq.com/wiki/develop/api-v2/dev-prepare/error-trace/websocket.html
+        if (json.has("code")) {
+            throw new WebSocketInvokeException(object);
+        } else if (json.get("op").getAsInt() == OpCode.INVALID_SESSION.getCode()) {
+            throw new ErrorCheckException(OpCode.INVALID_SESSION);
+        }
+        return json;
     }
 
 }

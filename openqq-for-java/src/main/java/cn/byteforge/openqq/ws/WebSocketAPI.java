@@ -64,7 +64,9 @@ public class WebSocketAPI {
                         "properties", properties
                 )
         ), uuid, EventType.READY, context);
-        Session session = EventParseHandler.GSON.fromJson(future.join(), Session.class);
+        JsonObject json = future.join();
+        Assert.notNull(json);
+        Session session = EventParseHandler.GSON.fromJson(json, Session.class);
         Assert.isFalse(context.getSessionMap().containsKey(uuid), "If you want to resume session, please use WebSocketAPI#resumeSession");
         return session;
     }
@@ -86,7 +88,7 @@ public class WebSocketAPI {
                         "seq", context.getHandledSeqMap().get(uuid)
                 )
         ), uuid, EventType.RESUMED, context);
-        future.join();
+        Assert.notNull(future.join(), "Resume session failed, is it invalid ?");
         log.info("Resume session: {}", oldSession);
     }
 
@@ -94,7 +96,7 @@ public class WebSocketAPI {
      * 发送请求并接收消息回调
      * @return d
      * */
-    public static CompletableFuture<JsonObject> send(Object payload, UUID uuid, @Nullable String callbackName, BotContext context) {
+    public static CompletableFuture<@Nullable JsonObject> send(Object payload, UUID uuid, @Nullable String callbackName, BotContext context) {
         String json = EventParseHandler.GSON.toJson(payload);
         log.info("Send json object: {}", json);
         Pair<ChannelId, ChainHandler> chainPair = context.getConnMap().get(uuid);

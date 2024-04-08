@@ -4,6 +4,7 @@ import cn.byteforge.openqq.ws.event.Event;
 import cn.byteforge.openqq.ws.event.EventType;
 import cn.hutool.core.lang.Assert;
 import com.google.gson.JsonObject;
+import lombok.Getter;
 import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,16 +14,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * API 响应处理
  * */
+@Getter
 public class APICallbackHandler extends ChainHandler {
 
+    private final int timeoutSeconds;
     // EventType: JsonData
     private final Map<String, BlockingQueue<JsonObject>> dataMap = new HashMap<>();
 
     public APICallbackHandler() {
+        this(3);
+    }
+
+    public APICallbackHandler(int timeoutSeconds) {
+        this.timeoutSeconds = timeoutSeconds;
         initDataMap();
     }
 
@@ -53,12 +62,15 @@ public class APICallbackHandler extends ChainHandler {
         }
     }
 
+    /**
+     * @return 接口返回等待超时时返回为空
+     * */
     @Nullable
     public JsonObject getCallback(@Nullable String eventName) throws InterruptedException {
         if (eventName == null) return null;
         BlockingQueue<JsonObject> queue = dataMap.get(eventName);
         Assert.notNull(queue, String.format("Unregistered event return type: %s", eventName));
-        return queue.take();
+        return queue.poll(timeoutSeconds, TimeUnit.SECONDS);
     }
 
 }
