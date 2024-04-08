@@ -110,10 +110,10 @@ public class TestMain {
     private static void runTest() throws Exception {
         String appId = new String(Files.readAllBytes(Paths.get("secrets/appId.txt")));
         String clientSecret = new String(Files.readAllBytes(Paths.get("secrets/clientSecret.txt")));
-        AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
-        Certificate certificate = new Certificate(appId, clientSecret, token);
 
         while (true) {
+            AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
+            Certificate certificate = new Certificate(appId, clientSecret, token);
             context = BotContext.create(certificate);
             RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
             String wssUrl = shard.getUrl();
@@ -127,19 +127,19 @@ public class TestMain {
                     new EventListener<GroupAtMessageEvent>() {
                         @Override
                         public void onEvent(GroupAtMessageEvent event) {
-                            event.reply("1");
-                            event.reply("2");
-                            event.reply("3");
-                            event.reply(new MessageBuilder()
-                                    .addCustomMarkdownButton(rowsJson, certificate.getAppId())
-                                    .build());
+//                            event.reply("1");
+//                            event.reply("2");
+//                            event.reply("3");
+//                            event.reply(new MessageBuilder()
+//                                    .addCustomMarkdownButton(rowsJson, certificate.getAppId())
+//                                    .build());
                         }
 
                         @Override
                         public Intent eventIntent() {
                             return Intent.register().withCustom(1 << 25).done();
                         }
-                    }, new EventListener<InteractionEvent>() {
+                    }/*, new EventListener<InteractionEvent>() {
                         @Override
                         public void onEvent(InteractionEvent event) {
                             event.callback(InteractResult.SUCCESS);
@@ -150,7 +150,7 @@ public class TestMain {
                         public Intent eventIntent() {
                             return Intent.register().withInteraction().done();
                         }
-                    });
+                    }*/);
 
             try {
                 QQConnection.connect(wssUrl, chainHandler, context,
@@ -159,7 +159,9 @@ public class TestMain {
                             // do sth
                         });
             } catch (Exception e) {
-                System.out.println("重新连接，原因：" + e.getMessage());
+                e.printStackTrace();
+            } finally {
+                System.out.println("================重新连接");
             }
         }
     }
