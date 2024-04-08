@@ -44,7 +44,7 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
   <dependency>
       <groupId>cn.byteforge.openqq</groupId>
       <artifactId>openqq-for-java</artifactId>
-      <version>0.1.0</version>
+      <version>0.2.0</version>
   </dependency>
 ```
 
@@ -56,49 +56,56 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
     public static void main(String[] args) throws Exception {
       String appId = new String(Files.readAllBytes(Paths.get("secrets/appId.txt")));
       String clientSecret = new String(Files.readAllBytes(Paths.get("secrets/clientSecret.txt")));
-      AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
-      Certificate certificate = new Certificate(appId, clientSecret, token);
-      context = BotContext.create(certificate);
-      RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
-      String wssUrl = shard.getUrl();
+      
+      try {
+        AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
+        Certificate certificate = new Certificate(appId, clientSecret, token);
+        context = BotContext.create(certificate);
+        RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
+        String wssUrl = shard.getUrl();
   
-      Intent intent = Intent.register()
-              .withCustom(1 << 25)
-              .withCustom(1 << 26)
-              .done();
-      ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
-              new EventListener<GroupAtMessageEvent>() {
-                @Override
-                public void onEvent(GroupAtMessageEvent event) {
-                  GroupAtMessageData data = event.getData();
-                  Message message = new MessageBuilder()
-                          .addTemplateMarkdownButton("")
-                          .setPassive(data.getId())
-                          .build();
-                  OpenAPI.sendGroupMessage(data.getGroupId(), message, certificate);
-                }
+        Intent intent = Intent.register()
+                .withCustom(1 << 25)
+                .withCustom(1 << 26)
+                .done();
+        ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
+                new EventListener<GroupAtMessageEvent>() {
+                  @Override
+                  public void onEvent(GroupAtMessageEvent event) {
+                    GroupAtMessageData data = event.getData();
+                    Message message = new MessageBuilder()
+                            .addTemplateMarkdownButton("")
+                            .setPassive(data.getId())
+                            .build();
+                    OpenAPI.sendGroupMessage(data.getGroupId(), message, certificate);
+                  }
   
-                @Override
-                public Intent eventIntent() {
-                  return Intent.register().withCustom(1 << 25).done();
-                }
-              }, new EventListener<InteractionEvent>() {
-                @Override
-                public void onEvent(InteractionEvent event) {
-                  System.out.println("收到：" + event);
-                }
+                  @Override
+                  public Intent eventIntent() {
+                    return Intent.register().withCustom(1 << 25).done();
+                  }
+                }, new EventListener<InteractionEvent>() {
+                  @Override
+                  public void onEvent(InteractionEvent event) {
+                    System.out.println("收到：" + event);
+                  }
   
-                @Override
-                public Intent eventIntent() {
-                  return Intent.register().withInteraction().done();
-                }
-              });
+                  @Override
+                  public Intent eventIntent() {
+                    return Intent.register().withInteraction().done();
+                  }
+                });
   
-      QQConnection.connect(wssUrl, chainHandler, context,
-              uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
-              uuid -> {
-                // do sth
-              });
+        QQConnection.connect(wssUrl, chainHandler, context,
+                uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
+                uuid -> {
+                  // do sth
+                });
+      } catch (Exception e) {
+        e.printStackTrace();
+      } finally {
+        System.out.println("检测到连接断开，自动重连中 ...");
+      }
     }
   
   }
