@@ -87,6 +87,7 @@ public class WebSocketAPI {
                 )
         ), uuid, EventType.RESUMED, context);
         future.join();
+        log.info("Resume session: {}", oldSession);
     }
 
     /**

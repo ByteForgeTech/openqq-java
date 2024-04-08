@@ -28,6 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
+import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -43,6 +44,7 @@ public class QQConnection {
 
     /**
      * 重建 WebSocket 连接，自动刷新 session
+     * TODO 重连前释放线程资源？
      * @param wssUrl wss 链接
      * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接

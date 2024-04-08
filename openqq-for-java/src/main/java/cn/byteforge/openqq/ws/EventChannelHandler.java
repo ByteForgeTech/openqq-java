@@ -1,5 +1,7 @@
 package cn.byteforge.openqq.ws;
 
+import cn.byteforge.openqq.exception.ErrorCheckException;
+import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -49,8 +51,14 @@ class EventChannelHandler extends SimpleChannelInboundHandler<Object> {
             log.debug("Received json message: {}", json);
             try {
                 chainHandler.handle(json);
+            } catch (ErrorCheckException e) {
+                if (e.getOpCode() == OpCode.INVALID_SESSION) {
+                    log.warn("Invalid session. Can it no longer be resumed (if there has been a resume within the reconnect interval, then this disconnection is expected)");
+                    ctx.close();
+                }
+                log.error("Error check exception: ", e);
             } catch (Exception e) {
-                log.warn("Handler exception: ", e);
+                log.error("Handler exception: ", e);
             }
         } else if (msg instanceof CloseWebSocketFrame){
             log.info("WebSocket client closed with signal");

@@ -1,3 +1,4 @@
+import cn.byteforge.openqq.exception.ErrorCheckException;
 import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.AccessToken;
 import cn.byteforge.openqq.http.entity.InteractResult;
@@ -15,6 +16,7 @@ import cn.byteforge.openqq.ws.event.EventListener;
 import cn.byteforge.openqq.ws.event.type.group.GroupAtMessageEvent;
 import cn.byteforge.openqq.ws.event.type.interact.InteractionEvent;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
+import cn.byteforge.openqq.ws.handler.ErrorCheckHandler;
 import com.google.gson.Gson;
 
 import java.nio.file.Files;
@@ -110,48 +112,56 @@ public class TestMain {
         String clientSecret = new String(Files.readAllBytes(Paths.get("secrets/clientSecret.txt")));
         AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
         Certificate certificate = new Certificate(appId, clientSecret, token);
-        context = BotContext.create(certificate);
-        RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
-        String wssUrl = shard.getUrl();
 
-        Intent intent = Intent.register()
-                .withCustom(1 << 25)
-                .withCustom(1 << 26)
-                .done();
-        ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
-                new EventListener<GroupAtMessageEvent>() {
-                    @Override
-                    public void onEvent(GroupAtMessageEvent event) {
-                        event.reply("1");
-                        event.reply("2");
-                        event.reply("3");
-                        event.reply(new MessageBuilder()
-                                .addCustomMarkdownButton(rowsJson, certificate.getAppId())
-                                .build());
-                    }
+        while (true) {
+            context = BotContext.create(certificate);
+            RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
+            String wssUrl = shard.getUrl();
 
-                    @Override
-                    public Intent eventIntent() {
-                        return Intent.register().withCustom(1 << 25).done();
-                    }
-                }, new EventListener<InteractionEvent>() {
-                    @Override
-                    public void onEvent(InteractionEvent event) {
-                        event.callback(InteractResult.SUCCESS);
-                        // TODO
-                    }
+            Intent intent = Intent.register()
+                    .withCustom(1 << 25)
+                    .withCustom(1 << 26)
+                    .done();
 
-                    @Override
-                    public Intent eventIntent() {
-                        return Intent.register().withInteraction().done();
-                    }
-                });
+            ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
+                    new EventListener<GroupAtMessageEvent>() {
+                        @Override
+                        public void onEvent(GroupAtMessageEvent event) {
+                            event.reply("1");
+                            event.reply("2");
+                            event.reply("3");
+                            event.reply(new MessageBuilder()
+                                    .addCustomMarkdownButton(rowsJson, certificate.getAppId())
+                                    .build());
+                        }
 
-        QQConnection.connect(wssUrl, chainHandler, context,
-                uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
-                uuid -> {
-                    // do sth
-                });
+                        @Override
+                        public Intent eventIntent() {
+                            return Intent.register().withCustom(1 << 25).done();
+                        }
+                    }, new EventListener<InteractionEvent>() {
+                        @Override
+                        public void onEvent(InteractionEvent event) {
+                            event.callback(InteractResult.SUCCESS);
+                            // TODO
+                        }
+
+                        @Override
+                        public Intent eventIntent() {
+                            return Intent.register().withInteraction().done();
+                        }
+                    });
+
+            try {
+                QQConnection.connect(wssUrl, chainHandler, context,
+                        uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
+                        uuid -> {
+                            // do sth
+                        });
+            } catch (Exception e) {
+                System.out.println("重新连接，原因：" + e.getMessage());
+            }
+        }
     }
 
 }
