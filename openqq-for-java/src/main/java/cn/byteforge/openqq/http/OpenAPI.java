@@ -16,7 +16,9 @@ import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * QQ 机器人 服务端开放的 openapi 接口对接
@@ -26,6 +28,7 @@ import java.util.Map;
 public class OpenAPI {
 
     private static final Gson GSON = new GsonBuilder().create();
+    private static final Map<String, Function<Map<String, Object>, Boolean>> beforeGetAuthResponseCheckMap = new HashMap<>();
 
     /**
      * 发送群聊消息
@@ -34,11 +37,11 @@ public class OpenAPI {
      * @param cert 访问凭证
      * */
     public static MessageResponse sendGroupMessage(String groupId, Message message, Certificate cert) {
-        return getAuthResponse(String.format("https://api.sgroup.qq.com/v2/groups/%s/messages", groupId), message.getData(), Method.POST, cert, MessageResponse.class);
+        return getAuthResponse(APIEnum.SEND_GROUP_MESSAGE.format(groupId), message.getData(), Method.POST, cert, MessageResponse.class);
     }
 
     /**
-     * 上传文件到群组
+     * 上传文件到用户
      * @param userId 用户的 openid
      * @param url 需要发送媒体资源的url
      * @param send 设置 true 会直接发送消息到目标端，且会占用主动消息频次
@@ -48,7 +51,7 @@ public class OpenAPI {
      * @param cert 访问凭证
      * */
     public static FileInfo uploadPrivateFile(String userId, String url, boolean send, UploadFileType type, Certificate cert) {
-        return doUploadGroupFile("users", userId, url, send, type, cert);
+        return doUploadFile("users", userId, url, send, type, cert);
     }
 
     /**
@@ -62,11 +65,11 @@ public class OpenAPI {
      * @param cert 访问凭证
      * */
     public static FileInfo uploadGroupFile(String groupId, String url, boolean send, UploadFileType type, Certificate cert) {
-        return doUploadGroupFile("groups", groupId, url, send, type, cert);
+        return doUploadFile("groups", groupId, url, send, type, cert);
     }
 
-    private static FileInfo doUploadGroupFile(String api, String openId, String url, boolean send, UploadFileType type, Certificate cert) {
-        return getAuthResponse(String.format("https://api.sgroup.qq.com/v2/%s/%s/files", api, openId), Maps.of(
+    private static FileInfo doUploadFile(String api, String openId, String url, boolean send, UploadFileType type, Certificate cert) {
+        return getAuthResponse(APIEnum.UPLOAD_FILE.format(api, openId), Maps.of(
                 "file_type", type.getValue(),
                 "url", url,
                 "srv_send_msg", send
@@ -80,7 +83,7 @@ public class OpenAPI {
      * @param cert 访问凭证
      * */
     public static void callbackInteraction(String interactionId, InteractResult result, Certificate cert) {
-        getAuthResponse(String.format("https://api.sgroup.qq.com/interactions/%s", interactionId), Maps.of(
+        getAuthResponse(APIEnum.INTERACTION_CALLBACK.format(interactionId), Maps.of(
                 "code", result.getCode()
         ), Method.PUT, cert, JsonObject.class);
     }
@@ -91,7 +94,7 @@ public class OpenAPI {
      * @param clientSecret 在开放平台管理端上获得。
      * */
     public static AccessToken getAppAccessToken(String appId, String clientSecret) {
-        return getResponse("https://bots.qq.com/app/getAppAccessToken", Maps.of(
+        return getResponse(APIEnum.GET_APP_ACCESS_TOKEN.getUrl(), Maps.of(
                 "appId", appId,
                 "clientSecret", clientSecret
         ), Method.POST, AccessToken.class, null);
@@ -102,7 +105,7 @@ public class OpenAPI {
      * @param cert 访问凭证
      * */
     public static String getUniversalWssUrl(Certificate cert) {
-        return getAuthResponse("https://api.sgroup.qq.com/gateway", null, Method.GET, cert, JsonObject.class)
+        return getAuthResponse(APIEnum.GET_WSS_URL.format(), null, Method.GET, cert, JsonObject.class)
                 .get("url").getAsString();
     }
 
@@ -111,11 +114,26 @@ public class OpenAPI {
      * @param cert 访问凭证
      * */
     public static RecommendShard getRecommendShardWssUrls(Certificate cert) {
-        return getAuthResponse("https://api.sgroup.qq.com/gateway/bot", null, Method.GET, cert, RecommendShard.class);
+        return getAuthResponse(APIEnum.GET_SHARD_WSS_URL.format(), null, Method.GET, cert, RecommendShard.class);
     }
 
-    private static <T> T getAuthResponse(String url, @Nullable Map<String, Object> data, Method method, Certificate cert, Class<T> clazz) {
-        return getResponse(url, data, method, clazz, Maps.of(
+    /**
+     * 添加全局发送数据前预检查方法
+     * @param apiEnum 准备检查的 API 枚举
+     * @param checkFunc 检查方法, <负载数据, 是否通过>
+     * */
+    public static void addBeforeGetAuthResponseCheck(APIEnum apiEnum, Function<Map<String, Object>, Boolean> checkFunc) {
+        beforeGetAuthResponseCheckMap.put(apiEnum.getUrl(), checkFunc);
+    }
+
+    /**
+     * @return 响应超时或检查未通过时返回为空
+     * */
+    @Nullable
+    private static <T> T getAuthResponse(APIEnum.Url url, @Nullable Map<String, Object> data, Method method, Certificate cert, Class<T> clazz) {
+        Function<Map<String, Object>, Boolean> checkFunc = beforeGetAuthResponseCheckMap.get(url.getUrl());
+        if (checkFunc != null && !checkFunc.apply(data)) return null;
+        return getResponse(url.toString(), data, method, clazz, Maps.of(
                 "Authorization", String.format(Global.Authorization, cert.getAccessToken().getContent()),
                 "X-Union-Appid", cert.getAppId()
         ));
