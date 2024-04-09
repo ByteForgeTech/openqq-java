@@ -44,7 +44,7 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
   <dependency>
       <groupId>cn.byteforge.openqq</groupId>
       <artifactId>openqq-for-java</artifactId>
-      <version>0.2.0</version>
+      <version>0.2.2</version>
   </dependency>
 ```
 
@@ -56,6 +56,11 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
     public static void main(String[] args) throws Exception {
       String appId = new String(Files.readAllBytes(Paths.get("secrets/appId.txt")));
       String clientSecret = new String(Files.readAllBytes(Paths.get("secrets/clientSecret.txt")));
+      // register global check hook
+      OpenAPI.addBeforeGetAuthResponseCheck(APIEnum.SEND_GROUP_MESSAGE, data -> {
+        System.out.println("预检查数据(不许返回!)" + data);
+        return false;
+      });
       
       try {
         AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
@@ -63,7 +68,7 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
         context = BotContext.create(certificate);
         RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
         String wssUrl = shard.getUrl();
-  
+
         Intent intent = Intent.register()
                 .withCustom(1 << 25)
                 .withCustom(1 << 26)
@@ -79,7 +84,7 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
                             .build();
                     OpenAPI.sendGroupMessage(data.getGroupId(), message, certificate);
                   }
-  
+
                   @Override
                   public Intent eventIntent() {
                     return Intent.register().withCustom(1 << 25).done();
@@ -89,13 +94,13 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
                   public void onEvent(InteractionEvent event) {
                     System.out.println("收到：" + event);
                   }
-  
+
                   @Override
                   public Intent eventIntent() {
                     return Intent.register().withInteraction().done();
                   }
                 });
-  
+
         QQConnection.connect(wssUrl, chainHandler, context,
                 uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
                 uuid -> {
@@ -104,7 +109,7 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
       } catch (Exception e) {
         e.printStackTrace();
       } finally {
-        System.out.println("检测到连接断开，自动重连中 ...");
+        System.out.println("Connection closed, try to re-generate token and reconnect ...");
       }
     }
   
