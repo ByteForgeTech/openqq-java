@@ -47,6 +47,7 @@ public class EventDispatchHandler extends ChainHandler {
                 Class<? extends Event> listenedEventType = getListenedEventType(listener);
                 Assert.notNull(listenedEventType);
                 if (Objects.requireNonNull(listenedEventType).isInstance(event)) {
+                    // 各事件内的 API 调用也存在 Token 过期的情况
                     listener.onEvent(event);
                 }
             } catch (ClassCastException e) {

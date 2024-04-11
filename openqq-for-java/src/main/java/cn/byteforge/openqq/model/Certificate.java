@@ -17,6 +17,13 @@ public class Certificate {
 
     private final String clientSecret;
 
-    private final AccessToken accessToken;
+    private AccessToken accessToken;
+
+    /**
+     * 更新 AccessToken
+     * */
+    public void updateToken(AccessToken token) {
+        this.accessToken = token;
+    }
 
 }

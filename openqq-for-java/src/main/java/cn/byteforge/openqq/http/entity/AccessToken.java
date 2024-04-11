@@ -31,11 +31,13 @@ public class AccessToken {
 
     /**
      * 检查凭证是否在指定时间后过期
-     * @param second 指定的时间秒数
+     * @param seconds 指定的时间秒数
      * */
-    public boolean expired(int second) {
-        long duration = 1000L * (second + Integer.parseInt(expiresIn));
-        return new Date().before(new Date(createTime + duration));
+    public boolean expired(int seconds) {
+        long now = System.currentTimeMillis();
+        long expirationTime = createTime + (Long.parseLong(expiresIn) * 1000);
+        long threshold = now + (seconds * 1000L);
+        return threshold >= expirationTime;
     }
 
 }
