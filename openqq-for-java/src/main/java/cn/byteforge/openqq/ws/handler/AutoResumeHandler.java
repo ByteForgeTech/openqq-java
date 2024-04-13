@@ -10,9 +10,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * 被动刷新 Session 处理
+ * @apiNote 需要依赖服务器通知 (此 Handler 无法处理 Session / AccessToken 失效的情况)
+ * */
 @Slf4j
 @AllArgsConstructor
-public class AutoReconnectHandler extends ChainHandler {
+public class AutoResumeHandler extends ChainHandler {
 
     private final String wssUrl;
     private final Consumer<UUID> reconnectCallback;
@@ -23,8 +27,8 @@ public class AutoReconnectHandler extends ChainHandler {
     protected Object doHandle(Object o) {
         Event event = (Event) o;
         if (event.getOpcode() == OpCode.RECONNECT) {
-            QQConnection.reconnect(wssUrl, getUuid(), getContext(), reconnectCallback);
-            log.info("QQ connection of uuid-{} already auto reconnected", getUuid());
+            QQConnection.resumeConnect(wssUrl, getUuid(), getContext(), reconnectCallback);
+            log.info("Session of connection uuid-{} already auto resumed", getUuid());
             return null;
         }
         return o;

@@ -93,7 +93,7 @@ public abstract class ChainHandler {
                 .append(new EventParseHandler())
                 .append(new HeartbeatHandler())
                 .append(new SequenceHandler.Received())
-                .append(new AutoReconnectHandler(wssUrl, reconnectCallback))
+                .append(new AutoResumeHandler(wssUrl, reconnectCallback))
                 .append(new APICallbackHandler())
                 .append(new EventDispatchHandler(listeners))
                 .append(new SequenceHandler.Handled())

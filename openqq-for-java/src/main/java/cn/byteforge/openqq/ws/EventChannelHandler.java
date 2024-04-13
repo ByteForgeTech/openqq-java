@@ -52,10 +52,10 @@ class EventChannelHandler extends SimpleChannelInboundHandler<Object> {
             try {
                 chainHandler.handle(json);
             } catch (ErrorCheckException e) {
-                if (e.getOpCode() == OpCode.INVALID_SESSION) {
-                    log.warn("Invalid session. Can it no longer be resumed (if there has been a resume within the reconnect interval, then this disconnection is expected)", e);
-                    ctx.close();
-                }
+//                if (e.getOpCode() == OpCode.INVALID_SESSION) {
+//                    log.warn("Invalid session. Can it no longer be resumed (if there has been a resume within the reconnect interval, then this disconnection is expected)", e);
+//                    ctx.close();
+//                }
                 log.error("Error check exception: ", e);
             } catch (Exception e) {
                 log.error("Handler exception: ", e);

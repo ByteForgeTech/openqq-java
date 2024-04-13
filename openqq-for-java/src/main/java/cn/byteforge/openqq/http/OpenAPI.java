@@ -158,6 +158,7 @@ public class OpenAPI {
             }
             JsonObject object = GSON.fromJson(response.body(), JsonObject.class);
             if (object == null) return null;
+            log.debug("Received json object from url: {}, json: {}", url, object);
             if (object.has("code")) {
                 throw new APIInvokeException(object.get("code").getAsInt(), object.get("message").getAsString(), body);
             }

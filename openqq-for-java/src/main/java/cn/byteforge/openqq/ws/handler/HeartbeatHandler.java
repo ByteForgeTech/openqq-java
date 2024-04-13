@@ -1,8 +1,5 @@
 package cn.byteforge.openqq.ws.handler;
 
-import cn.byteforge.openqq.http.OpenAPI;
-import cn.byteforge.openqq.http.entity.AccessToken;
-import cn.byteforge.openqq.model.Certificate;
 import cn.byteforge.openqq.task.HeartbeatRunnable;
 import cn.byteforge.openqq.ws.event.Event;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 心跳处理
- * TODO
  * */
 @Slf4j
 public class HeartbeatHandler extends ChainHandler {
@@ -41,12 +37,11 @@ public class HeartbeatHandler extends ChainHandler {
                 // ScheduledExecutor leaves 20% of the interval to avoid errors
                 interval -= (interval / 10) * 2;
                 scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getUuid(), getContext()), interval, interval, TimeUnit.MILLISECONDS);
-                log.debug("Heartbeat thread start");
+                log.debug("Heartbeat thread start with interval {}ms", interval);
                 return null;
             }
             case HEARTBEAT: {
-                log.info("Received HEARTBEAT");
-                tryUpdateAccessToken();
+                log.debug("Received HEARTBEAT");
                 return null;
             }
             case HEARTBEAT_ACK: {
@@ -55,16 +50,6 @@ public class HeartbeatHandler extends ChainHandler {
             }
         }
         return event;
-    }
-
-    // check and update if token expired in 600s
-    protected void tryUpdateAccessToken() {
-        Certificate certificate = getContext().getCertificate();
-        if (certificate.getAccessToken().expired(600)) {
-            AccessToken token = OpenAPI.getAppAccessToken(certificate.getAppId(), certificate.getClientSecret());
-            certificate.updateToken(token);
-            log.info("AccessToken auto refreshed: {}", token.getContent());
-        }
     }
 
 }
