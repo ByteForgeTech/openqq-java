@@ -37,10 +37,6 @@ public class QQHelper {
             AccessToken token = OpenAPI.getAppAccessToken(certificate.getAppId(), certificate.getClientSecret());
             certificate.updateToken(token);
             log.info("AccessToken auto refreshed: {}", token.getContent());
-
-            Session session = context.getSessionFuncMap().get(uuid).apply(uuid);
-            log.info("Session auto reapplied: {}", session);
-            context.getSessionMap().put(uuid, session);
         };
     }
 
