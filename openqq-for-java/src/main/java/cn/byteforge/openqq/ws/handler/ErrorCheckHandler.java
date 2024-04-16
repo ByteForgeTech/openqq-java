@@ -1,6 +1,5 @@
 package cn.byteforge.openqq.ws.handler;
 
-import cn.byteforge.openqq.exception.ErrorCheckException;
 import cn.byteforge.openqq.exception.WebSocketInvokeException;
 import cn.byteforge.openqq.ws.entity.enumerate.OpCode;
 import com.google.gson.JsonObject;
@@ -20,7 +19,10 @@ public class ErrorCheckHandler extends ChainHandler {
         if (json.has("code")) {
             throw new WebSocketInvokeException(object);
         } else if (json.get("op").getAsInt() == OpCode.INVALID_SESSION.getCode()) {
-            throw new ErrorCheckException(OpCode.INVALID_SESSION);
+            log.error("检测到 Session 失效, 此时 token 是否已刷新 ? {}", OpCode.INVALID_SESSION);
+            // TODO 是否要在此 new Session (前面new的session也过期了??
+            // 关注 {"op":9,"d":false}, 看看 d 有没有其他值
+            return null;
         }
         return json;
     }

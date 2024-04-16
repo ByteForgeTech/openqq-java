@@ -47,7 +47,7 @@ public class QQConnection {
      * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
-    public static void reconnect(String wssUrl, UUID uuid, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
+    public static void resumeConnect(String wssUrl, UUID uuid, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
         doConnect(wssUrl, null, context, null, uuid, (id) -> {
             WebSocketAPI.resumeSession(uuid, context);
             if (callback == null) return;
@@ -123,7 +123,10 @@ public class QQConnection {
                     next.setMetaData(uuid, context);
                     next = next.next();
                 }
-                if (sessionFunction != null) context.getSessionMap().put(uuid, sessionFunction.apply(uuid));
+                if (sessionFunction != null) {
+                    context.getSessionFuncMap().put(uuid, sessionFunction);
+                    context.getSessionMap().put(uuid, sessionFunction.apply(uuid));
+                }
             }
             if (callback != null) callback.accept(uuid);
             channel.closeFuture().sync();

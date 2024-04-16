@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 心跳处理
- * TODO
  * */
 @Slf4j
 public class HeartbeatHandler extends ChainHandler {
@@ -38,7 +37,7 @@ public class HeartbeatHandler extends ChainHandler {
                 // ScheduledExecutor leaves 20% of the interval to avoid errors
                 interval -= (interval / 10) * 2;
                 scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getUuid(), getContext()), interval, interval, TimeUnit.MILLISECONDS);
-                log.debug("Heartbeat thread start");
+                log.debug("Heartbeat thread start with interval {}ms", interval);
                 return null;
             }
             case HEARTBEAT: {

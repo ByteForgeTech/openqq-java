@@ -1,27 +1,22 @@
-import cn.byteforge.openqq.exception.ErrorCheckException;
+import cn.byteforge.openqq.QQHelper;
+import cn.byteforge.openqq.http.APIEnum;
 import cn.byteforge.openqq.http.OpenAPI;
 import cn.byteforge.openqq.http.entity.AccessToken;
-import cn.byteforge.openqq.http.entity.InteractResult;
 import cn.byteforge.openqq.http.entity.RecommendShard;
-import cn.byteforge.openqq.message.Message;
-import cn.byteforge.openqq.message.MessageBuilder;
 import cn.byteforge.openqq.model.Certificate;
 import cn.byteforge.openqq.ws.BotContext;
 import cn.byteforge.openqq.ws.QQConnection;
 import cn.byteforge.openqq.ws.WebSocketAPI;
 import cn.byteforge.openqq.ws.entity.Intent;
-import cn.byteforge.openqq.ws.entity.data.GroupAtMessageData;
-import cn.byteforge.openqq.ws.entity.data.InteractionData;
 import cn.byteforge.openqq.ws.event.EventListener;
 import cn.byteforge.openqq.ws.event.type.group.GroupAtMessageEvent;
-import cn.byteforge.openqq.ws.event.type.interact.InteractionEvent;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
-import cn.byteforge.openqq.ws.handler.ErrorCheckHandler;
-import com.google.gson.Gson;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Locale;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class TestMain {
 
@@ -101,22 +96,28 @@ public class TestMain {
             "      ]\n" +
             "    }\n" +
             "  ]";
-    private static BotContext context;
 
     public static void main(String[] args) throws Exception {
         runTest();
     }
 
     private static void runTest() throws Exception {
-        String appId = new String(Files.readAllBytes(Paths.get("secrets/appId.txt")));
-        String clientSecret = new String(Files.readAllBytes(Paths.get("secrets/clientSecret.txt")));
+        String appId = new String(Files.readAllBytes(Paths.get("openqq-for-java/secrets/appId.txt")));
+        String clientSecret = new String(Files.readAllBytes(Paths.get("openqq-for-java/secrets/clientSecret.txt")));
+        OpenAPI.addBeforeGetAuthResponseCheck(APIEnum.SEND_GROUP_MESSAGE, data -> {
+            System.out.println("全局预检查数据函数 ... " + data);
+            return true;
+        });
 
+        ScheduledExecutorService service;
         while (true) {
             AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
             Certificate certificate = new Certificate(appId, clientSecret, token);
-            context = BotContext.create(certificate);
             RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
             String wssUrl = shard.getUrl();
+
+            BotContext context = BotContext.create(certificate);
+            service = Executors.newScheduledThreadPool(1);
 
             Intent intent = Intent.register()
                     .withCustom(1 << 25)
@@ -127,40 +128,33 @@ public class TestMain {
                     new EventListener<GroupAtMessageEvent>() {
                         @Override
                         public void onEvent(GroupAtMessageEvent event) {
-//                            event.reply("1");
-//                            event.reply("2");
-//                            event.reply("3");
-//                            event.reply(new MessageBuilder()
-//                                    .addCustomMarkdownButton(rowsJson, certificate.getAppId())
-//                                    .build());
+                            if (event.getD().getContent().contains("session test")) {
+                                event.reply("1");
+                            }
                         }
 
                         @Override
                         public Intent eventIntent() {
                             return Intent.register().withCustom(1 << 25).done();
                         }
-                    }/*, new EventListener<InteractionEvent>() {
-                        @Override
-                        public void onEvent(InteractionEvent event) {
-                            event.callback(InteractResult.SUCCESS);
-                            // TODO
-                        }
-
-                        @Override
-                        public Intent eventIntent() {
-                            return Intent.register().withInteraction().done();
-                        }
-                    }*/);
+                    });
 
             try {
+                final ScheduledExecutorService finalService = service;
                 QQConnection.connect(wssUrl, chainHandler, context,
                         uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
                         uuid -> {
-                            // do sth
+                            // TODO embed
+                            finalService.schedule(
+                                    QQHelper.refreshTokenRunnable(uuid, context),
+                                    Integer.parseInt(token.getExpiresIn()),
+                                    TimeUnit.SECONDS
+                            );
                         });
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
+                service.shutdownNow();
                 System.out.println("================重新连接");
             }
         }

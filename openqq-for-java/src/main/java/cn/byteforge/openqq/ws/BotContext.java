@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /**
  * Bot 上下文
@@ -50,6 +51,12 @@ public class BotContext {
     private Map<UUID, Session> sessionMap;
 
     /**
+     * SessionFunc Map
+     * */
+    @Setter(AccessLevel.NONE)
+    private Map<UUID, Function<UUID, Session>> sessionFuncMap;
+
+    /**
      * 接收到的消息序号 Map
      * */
     @Setter(AccessLevel.NONE)
@@ -65,6 +72,7 @@ public class BotContext {
     {
         this.connMap = new ConcurrentHashMap<>();
         this.sessionMap = new ConcurrentHashMap<>();
+        this.sessionFuncMap = new ConcurrentHashMap<>();
         this.receivedSeqMap = new ConcurrentHashMap<>();
         this.handledSeqMap = new ConcurrentHashMap<>();
     }
