@@ -17,6 +17,10 @@ public class Certificate {
 
     private final String clientSecret;
 
+    /**
+     * 申请的 AccessToken
+     * @apiNote 同一 appId 同一时间段对应唯一 token, 过期后方可更新
+     * */
     private AccessToken accessToken;
 
     /**

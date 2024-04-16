@@ -29,12 +29,17 @@ public class QQHelper {
         return () -> {
             log.info("Start trying to update AccessToken");
             Certificate certificate = context.getCertificate();
-            if (certificate.getAccessToken().expired(thresholdSeconds)) {
-                AccessToken token = OpenAPI.getAppAccessToken(certificate.getAppId(), certificate.getClientSecret());
-                certificate.updateToken(token);
-                log.info("AccessToken auto refreshed: {}", token.getContent());
+            if (!certificate.getAccessToken().expired(thresholdSeconds)) {
+                log.warn("AccessToken no expired, is it expired ?");
+                return;
             }
+
+            AccessToken token = OpenAPI.getAppAccessToken(certificate.getAppId(), certificate.getClientSecret());
+            certificate.updateToken(token);
+            log.info("AccessToken auto refreshed: {}", token.getContent());
+
             Session session = context.getSessionFuncMap().get(uuid).apply(uuid);
+            log.info("Session auto reapplied: {}", session);
             context.getSessionMap().put(uuid, session);
         };
     }

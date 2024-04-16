@@ -1,0 +1,139 @@
+POST https://api.sgroup.qq.com/v2/groups/D5F67D40DCF78B52E48A36E7EE27B566/messages
+Authorization: QQBot 4ZVMLRMVP5PEgq4lcmCiTPWR8E11jTrVxVHeyVEPySHZ3J1g0Suu_npV5IrhP9qt92dbxqtafnxp
+X-Union-Appid: 102074295
+Content-Type: application/json
+
+{
+  "keyboard": {
+    "content": {
+      "rows": [
+        {
+          "buttons": [
+            {
+              "id": "1",
+              "render_data": {
+                "label": "初始设置",
+                "visited_label": "初始设置",
+                "style": 0
+              },
+              "action": {
+                "type": 1,
+                "permission": {
+                  "type": 1
+                },
+                "data": "init",
+                "unsupport_tips": "当前客户端暂不支持此功能"
+              }
+            },
+            {
+              "id": "2",
+              "render_data": {
+                "label": "人工客服",
+                "visited_label": "人工客服",
+                "style": 0
+              },
+              "action": {
+                "type": 0,
+                "permission": {
+                  "type": 1
+                },
+                "data": "https://qm.qq.com/cgi-bin/qm/qr?k=Ne_roJ9CEhV-HiZ4Dl9byid1Fmo562ke&jump_from=webapi&authKey=WQvk+NUxKx+dmYjZ9ya8PSJ0z5yltT0Mz5kmXg9W67cLagYXss3J654skBO5C8/v",
+                "unsupport_tips": "当前客户端暂不支持此功能"
+              }
+            }
+          ]
+        },
+        {
+          "buttons": [
+            {
+              "id": "3",
+              "render_data": {
+                "label": "使用说明",
+                "visited_label": "使用说明",
+                "style": 1
+              },
+              "action": {
+                "type": 1,
+                "permission": {
+                  "type": 2
+                },
+                "data": "help",
+                "unsupport_tips": "当前客户端暂不支持此功能"
+              }
+            },
+            {
+              "id": "4",
+              "render_data": {
+                "label": "MC专区",
+                "visited_label": "MC专区",
+                "style": 1
+              },
+              "action": {
+                "type": 1,
+                "permission": {
+                  "type": 2
+                },
+                "data": "mc",
+                "unsupport_tips": "当前客户端暂不支持此功能"
+              }
+            },
+            {
+              "id": "5",
+              "render_data": {
+                "label": "拓展支持",
+                "visited_label": "拓展支持",
+                "style": 1
+              },
+              "action": {
+                "type": 1,
+                "permission": {
+                  "type": 2
+                },
+                "data": "extension",
+                "unsupport_tips": "当前客户端暂不支持此功能"
+              }
+            }
+          ]
+        },
+        {
+          "buttons": [
+            {
+              "id": "6",
+              "render_data": {
+                "label": "功能大全",
+                "visited_label": "功能大全",
+                "style": 1
+              },
+              "action": {
+                "type": 1,
+                "permission": {
+                  "type": 2
+                },
+                "data": "all_functions",
+                "unsupport_tips": "当前客户端暂不支持此功能"
+              }
+            }
+          ]
+        }
+      ],
+      "bot_appid": 102074295
+    }
+  },
+  "markdown": {
+    "custom_template_id": "102074295_1708871012",
+    "params": [{
+      "key": "title",
+      "values": ["标题"]
+    },{
+      "key": "content",
+      "values": ["assfhdsfkjsdkfjkfj"]
+    }],
+    "keyboard": {
+      "id": "102074295_1708871012"
+    }
+  },
+  "msg_type": 2,
+  "msg_id": "ROBOT1.0_TyDZbpEruJp-GgVv3PuQUqtocR8Y4.iBwuBHY2zbAWFjLnpLVwGM-TnECWsLG1JA.XY1cQ4cgkFkY1y6KSLaoA!!",
+  "msg_seq": 1,
+  "content": ""
+}

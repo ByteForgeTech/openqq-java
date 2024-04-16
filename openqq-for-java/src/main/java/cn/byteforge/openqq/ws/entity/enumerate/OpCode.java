@@ -3,9 +3,11 @@ package cn.byteforge.openqq.ws.entity.enumerate;
 import cn.byteforge.openqq.exception.UnknownOpCodeException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.util.Arrays;
 
+@ToString
 @Getter
 @AllArgsConstructor
 public enum OpCode {
