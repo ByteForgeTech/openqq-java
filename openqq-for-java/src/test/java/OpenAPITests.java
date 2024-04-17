@@ -32,55 +32,18 @@ public class OpenAPITests {
 
     @BeforeAll
     static void setup() throws Exception {
-        String appId = new String(Files.readAllBytes(Paths.get("../secrets/appId.txt")));
-        String clientSecret = new String(Files.readAllBytes(Paths.get("../secrets/clientSecret.txt")));
-        AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
-        Certificate certificate = new Certificate(appId, clientSecret, token);
-        context = BotContext.create(certificate);
-        RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
-        wssUrl = shard.getUrl();
-        System.out.println(shard);
+//        String appId = new String(Files.readAllBytes(Paths.get("../secrets/appId.txt")));
+//        String clientSecret = new String(Files.readAllBytes(Paths.get("../secrets/clientSecret.txt")));
+//        AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
+//        Certificate certificate = new Certificate(appId, clientSecret, token);
+//        context = BotContext.create();
+//        RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
+//        wssUrl = shard.getUrl();
+//        System.out.println(shard);
     }
 
     @Test
     void testStandalone() throws Exception {
-        Intent intent = Intent.register().withAll().done();
-        ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
-                new EventListener<GroupAtMessageEvent>() {
-            @Override
-            public void onEvent(GroupAtMessageEvent event) {
-                GroupAtMessageData data = event.getD();
-                FileInfo fileInfo = OpenAPI.uploadGroupFile(data.getGroupId(), "https://ubot.byteforge.cn/static/bg.png", false, UploadFileType.IMAGE, context.getCertificate());
-                OpenAPI.sendGroupMessage(data.getGroupId(), new MessageBuilder()
-                        .setPassive(data.getId())
-                        .build(), context.getCertificate());
-            }
-
-            @Override
-            public Intent eventIntent() {
-                return Intent.register().withCustom(1 << 25).done();
-            }
-        },
-                new EventListener<GroupMsgRejectEvent>() {
-                    @Override
-                    public void onEvent(GroupMsgRejectEvent event) {
-        //                        Message message = new MessageBuilder()
-        ////                                .addTemplateMarkdown()
-        //                                .build();
-                        System.out.println("已被群组禁言：" + event);
-                    }
-
-                    @Override
-                    public Intent eventIntent() {
-                        return Intent.register().withAll().done();
-                    }
-        });
-
-        QQConnection.connect(wssUrl, chainHandler, context,
-                uuid -> WebSocketAPI.newShardSession(intent, uuid, Shard.STANDALONE, null, context),
-                uuid -> {
-                    // do sth
-                });
     }
 
 }

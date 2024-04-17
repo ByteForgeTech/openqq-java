@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 public class TestMain {
 
@@ -108,23 +109,10 @@ public class TestMain {
             System.out.println("全局预检查数据函数 ... " + data);
             return true;
         });
+        BotContext context = BotContext.create(appId, clientSecret, Executors.newFixedThreadPool(20));
 
-        ScheduledExecutorService service;
-        while (true) {
-            AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
-            Certificate certificate = new Certificate(appId, clientSecret, token);
-            RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
-            String wssUrl = shard.getUrl();
-
-            BotContext context = BotContext.create(certificate);
-            service = Executors.newScheduledThreadPool(1);
-
-            Intent intent = Intent.register()
-                    .withCustom(1 << 25)
-                    .withCustom(1 << 26)
-                    .done();
-
-            ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
+        Supplier<ChainHandler> handlerSupplier = () -> {
+            return ChainHandler.defaultChainGroup(null,
                     new EventListener<GroupAtMessageEvent>() {
                         @Override
                         public void onEvent(GroupAtMessageEvent event) {
@@ -138,26 +126,19 @@ public class TestMain {
                             return Intent.register().withCustom(1 << 25).done();
                         }
                     });
+        };
 
-            try {
-                final ScheduledExecutorService finalService = service;
-                QQConnection.connect(wssUrl, chainHandler, context,
-                        uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
-                        uuid -> {
-                            // TODO embed
-                            finalService.schedule(
-                                    QQHelper.refreshTokenRunnable(uuid, context),
-                                    Integer.parseInt(token.getExpiresIn()),
-                                    TimeUnit.SECONDS
-                            );
-                        });
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                service.shutdownNow();
-                System.out.println("================重新连接");
-            }
+        try {
+            QQConnection.connect(context, handlerSupplier,
+                    uuid -> WebSocketAPI.newStandaloneSession(Intent.register().withAll().done(), uuid, null, context),
+                    uuid -> {
+                        // TODO embed
+                    });
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+        // If you are running in main, you need to block the main thread
+        System.in.read();
     }
 
 }
