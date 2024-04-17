@@ -1,7 +1,11 @@
 package cn.byteforge.openqq.ws;
 
+import cn.byteforge.openqq.QQHelper;
+import cn.byteforge.openqq.http.OpenAPI;
+import cn.byteforge.openqq.http.entity.RecommendShard;
 import cn.byteforge.openqq.ws.entity.Session;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
+import cn.hutool.core.lang.Assert;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -22,18 +26,24 @@ import io.netty.handler.ssl.SslHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * 状态维护、登录鉴权、心跳维护、断线恢复重连
  * */
+@Slf4j
 public class QQConnection {
 
     /**
@@ -42,104 +52,118 @@ public class QQConnection {
     public static final ChannelGroup CLIENT_GROUPS = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     /**
-     * 重建 WebSocket 连接，自动刷新 session
-     * @param wssUrl wss 链接
+     * 重建 WebSocket 连接
      * @param context 机器人上下文
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
-    public static void resumeConnect(String wssUrl, UUID uuid, BotContext context, @Nullable Consumer<UUID> callback) throws InterruptedException {
-        doConnect(wssUrl, null, context, null, uuid, (id) -> {
-            WebSocketAPI.resumeSession(uuid, context);
-            if (callback == null) return;
-            callback.accept(id);
-        });
+    public static void reconnect(UUID uuid, BotContext context, @Nullable Consumer<UUID> callback) {
+        doConnect(context, null, null, uuid, callback);
     }
 
     /**
      * 建立 WebSocket 连接
-     * @param wssUrl wss 链接
-     * @param chainHandler 链式处理实例，使用分片连接时请分别生成每个链接对应的 ChainHandler，确保线程安全
      * @param context 机器人上下文
+     * @param handlerSupplier 链式处理 Supplier，使用分片连接时请分别生成每个链接对应的 ChainHandler，确保线程安全
      * @param callback 连接成功时回调执行，回传 UUID，用于标识分片链接
      * */
-    public static void connect(String wssUrl, ChainHandler chainHandler, BotContext context, Function<UUID, Session> sessionFunction, @Nullable Consumer<UUID> callback) throws InterruptedException {
-        doConnect(wssUrl, chainHandler, context, sessionFunction, null, callback);
+    public static void connect(BotContext context, Supplier<ChainHandler> handlerSupplier, Function<UUID, Session> sessionFunction, @Nullable Consumer<UUID> callback) {
+        doConnect(context, handlerSupplier, sessionFunction, null, callback);
     }
 
     /**
-     * @apiNote connect 需要绑定 session 和 chainHandler，reconnect 需要根据 uuid 刷新 channel
+     * @apiNote connect 需要绑定 session 和 chainHandler，reconnect 需要根据 uuid 重建 ws 连接
      * */
     private static void doConnect(
-            String url,
-            @Nullable ChainHandler chainHandler,
             BotContext context,
+            @Nullable Supplier<ChainHandler> handlerSupplier,
             @Nullable Function<UUID, Session> sessionFunction,
-            @Nullable UUID uuid,
+            @Nullable final UUID _uuid,
             @Nullable Consumer<UUID> callback
-    ) throws InterruptedException {
-        EventChannelHandler eventHandler = new EventChannelHandler(getChainHandler(chainHandler, uuid, context));
-        EventLoopGroup group = new NioEventLoopGroup();
-        try {
-            Bootstrap bootstrap = new Bootstrap()
-                    .group(group)
-                    .option(ChannelOption.TCP_NODELAY, true)
-                    .option(ChannelOption.SO_KEEPALIVE, true)
-                    .channel(NioSocketChannel.class)
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @SneakyThrows
-                        @Override
-                        protected void initChannel(@NotNull SocketChannel ch) {
-                            ch.pipeline()
-                                    .addLast(new SslHandler(SslContextBuilder.forClient().build().newEngine(ch.alloc())))
-                                    .addLast(new HttpClientCodec())
-                                    // 添加一个用于支持大数据流的支持
-                                    .addLast(new ChunkedWriteHandler())
-                                    // 添加一个聚合器，这个聚合器主要是将HttpMessage聚合成FullHttpRequest/Response
-                                    .addLast(new HttpObjectAggregator(1024 * 1024))
-                                    .addLast(eventHandler);
-                        }
-                    });
+    ) {
+        context.getExecutor().submit(() -> {
+            UUID uuid = _uuid != null ? _uuid : UUID.randomUUID();
+            ChainHandler chainHandler = getChainHandler(handlerSupplier, uuid, context);
+            EventChannelHandler eventHandler = new EventChannelHandler(chainHandler);
+            ScheduledExecutorService tokenService = Executors.newScheduledThreadPool(1);
+            EventLoopGroup group = new NioEventLoopGroup();
+            try {
+                Bootstrap bootstrap = new Bootstrap()
+                        .group(group)
+                        .option(ChannelOption.TCP_NODELAY, true)
+                        .option(ChannelOption.SO_KEEPALIVE, true)
+                        .channel(NioSocketChannel.class)
+                        .handler(new ChannelInitializer<SocketChannel>() {
+                            @SneakyThrows
+                            @Override
+                            protected void initChannel(@NotNull SocketChannel ch) {
+                                ch.pipeline()
+                                        .addLast(new SslHandler(SslContextBuilder.forClient().build().newEngine(ch.alloc())))
+                                        .addLast(new HttpClientCodec())
+                                        // 添加一个用于支持大数据流的支持
+                                        .addLast(new ChunkedWriteHandler())
+                                        // 添加一个聚合器，这个聚合器主要是将HttpMessage聚合成FullHttpRequest/Response
+                                        .addLast(new HttpObjectAggregator(1024 * 1024))
+                                        .addLast(eventHandler);
+                            }
+                        });
 
-            URI uri = new URI(url);
-            WebSocketClientHandshaker handshake = WebSocketClientHandshakerFactory
-                    .newHandshaker(uri, WebSocketVersion.V13, null, true, null);
-            Channel channel = bootstrap
-                    .connect(uri.getHost(), 443)
-                    .sync()
-                    .channel();
-            eventHandler.setHandshaker(handshake);
-            handshake.handshake(channel);
-            // block until handshake success
-            eventHandler.getHandshakeFuture().sync();
-            CLIENT_GROUPS.add(channel);
+                RecommendShard shard = OpenAPI.getRecommendShardWssUrls(context.getCertificate());
+                URI uri = new URI(shard.getUrl());
+                WebSocketClientHandshaker handshake = WebSocketClientHandshakerFactory
+                        .newHandshaker(uri, WebSocketVersion.V13, null, true, null);
+                Channel channel = bootstrap
+                        .connect(uri.getHost(), 443)
+                        .sync()
+                        .channel();
+                eventHandler.setHandshaker(handshake);
+                handshake.handshake(channel);
+                // block until handshake success
+                eventHandler.getHandshakeFuture().sync();
+                CLIENT_GROUPS.add(channel);
 
-            if (uuid != null) { // reconnect
-                context.updateChannel(uuid, channel.id());
-            } else {
-                uuid = context.bindChannel(channel.id(), chainHandler);
+                // bind channel to uuid
+                context.bindChannel(uuid, channel.id(), chainHandler);
+
                 // set context to ChainHandler
                 ChainHandler next = chainHandler;
                 while (next != null) {
                     next.setMetaData(uuid, context);
                     next = next.next();
                 }
-                if (sessionFunction != null) {
-                    context.getSessionFuncMap().put(uuid, sessionFunction);
-                    context.getSessionMap().put(uuid, sessionFunction.apply(uuid));
-                }
+
+                // init session
+                context.initSession(uuid, sessionFunction);
+
+                // auto refresh token thread
+                tokenService.schedule(
+                        QQHelper.refreshTokenRunnable(uuid, context),
+                        Integer.parseInt(context.getCertificate().getAccessToken().getExpiresIn()),
+                        TimeUnit.SECONDS
+                );
+                if (callback != null) callback.accept(uuid);
+                channel.closeFuture().sync();
+            } catch (Exception e) {
+                log.error("Exception occurred in wss connection", e);
+            } finally {
+                Channel channel = CLIENT_GROUPS.find(context.getConnMap().get(uuid).getKey());
+                CLIENT_GROUPS.remove(channel);
+                tokenService.shutdownNow();
+                try {
+                    group.shutdownGracefully().sync();
+                } catch (InterruptedException ignore) {}
+                log.info("Connection closed, please make sure that there is a another connection established ...");
             }
-            if (callback != null) callback.accept(uuid);
-            channel.closeFuture().sync();
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        } finally {
-            group.shutdownGracefully().sync();
-        }
+        });
     }
 
-    private static ChainHandler getChainHandler(@Nullable ChainHandler chainHandler, @Nullable UUID uuid, BotContext context) {
-        if (chainHandler != null) return chainHandler;
-        return context.getConnMap().get(uuid).getValue();
+    private static ChainHandler getChainHandler(@Nullable Supplier<ChainHandler> handlerSupplier, UUID uuid, BotContext context) {
+        // 初始化
+        if (handlerSupplier != null) {
+            context.getChainSupplierMap().put(uuid, handlerSupplier);
+            return handlerSupplier.get();
+        }
+        // 重连
+        return context.getChainSupplierMap().get(uuid).get();
     }
 
 }

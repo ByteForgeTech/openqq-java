@@ -67,7 +67,9 @@ public class WebSocketAPI {
         JsonObject json = future.join();
         Assert.notNull(json);
         Session session = EventParseHandler.GSON.fromJson(json, Session.class);
-        Assert.isFalse(context.getSessionMap().containsKey(uuid), "If you want to resume session, please use WebSocketAPI#resumeSession");
+        if (context.getSessionMap().containsKey(uuid)) {
+            log.info("Duplicated session detected, is this in resume session or reconnect ?");
+        }
         return session;
     }
 

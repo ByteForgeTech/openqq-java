@@ -87,13 +87,13 @@ public abstract class ChainHandler {
      * @apiNote 默认链式调用组不保证线程安全，请自行注意
      * */
     @SafeVarargs
-    public static ChainHandler defaultChainGroup(String wssUrl, @Nullable Consumer<UUID> reconnectCallback, EventListener<? extends Event> ...listeners) {
+    public static ChainHandler defaultChainGroup(@Nullable Consumer<UUID> reconnectCallback, EventListener<? extends Event> ...listeners) {
         return builder()
                 .append(new ErrorCheckHandler())
                 .append(new EventParseHandler())
                 .append(new HeartbeatHandler())
                 .append(new SequenceHandler.Received())
-                .append(new AutoReconnectHandler(wssUrl, reconnectCallback))
+                .append(new AutoReconnectHandler(reconnectCallback))
                 .append(new APICallbackHandler())
                 .append(new EventDispatchHandler(listeners))
                 .append(new SequenceHandler.Handled())
