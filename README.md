@@ -54,63 +54,42 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
     private static BotContext context;
   
     public static void main(String[] args) throws Exception {
-      String appId = new String(Files.readAllBytes(Paths.get("secrets/appId.txt")));
-      String clientSecret = new String(Files.readAllBytes(Paths.get("secrets/clientSecret.txt")));
-      // register global check hook
+      String appId = new String(Files.readAllBytes(Paths.get("openqq-for-java/secrets/appId.txt")));
+      String clientSecret = new String(Files.readAllBytes(Paths.get("openqq-for-java/secrets/clientSecret.txt")));
       OpenAPI.addBeforeGetAuthResponseCheck(APIEnum.SEND_GROUP_MESSAGE, data -> {
-        System.out.println("预检查数据(不许返回!)" + data);
-        return false;
+        System.out.println("全局预检查数据函数 ... " + data);
+        return true;
       });
-      
-      try {
-        AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
-        Certificate certificate = new Certificate(appId, clientSecret, token);
-        context = BotContext.create(certificate);
-        RecommendShard shard = OpenAPI.getRecommendShardWssUrls(certificate);
-        String wssUrl = shard.getUrl();
+      BotContext context = BotContext.create(appId, clientSecret, Executors.newFixedThreadPool(20));
 
-        Intent intent = Intent.register()
-                .withCustom(1 << 25)
-                .withCustom(1 << 26)
-                .done();
-        ChainHandler chainHandler = ChainHandler.defaultChainGroup(wssUrl, null,
+      Supplier<ChainHandler> handlerSupplier = () -> {
+        return ChainHandler.defaultChainGroup(null,
                 new EventListener<GroupAtMessageEvent>() {
                   @Override
                   public void onEvent(GroupAtMessageEvent event) {
-                    GroupAtMessageData data = event.getData();
-                    Message message = new MessageBuilder()
-                            .addTemplateMarkdownButton("")
-                            .setPassive(data.getId())
-                            .build();
-                    OpenAPI.sendGroupMessage(data.getGroupId(), message, certificate);
+                    if (event.getD().getContent().contains("session test")) {
+                      event.reply("1");
+                    }
                   }
 
                   @Override
                   public Intent eventIntent() {
                     return Intent.register().withCustom(1 << 25).done();
                   }
-                }, new EventListener<InteractionEvent>() {
-                  @Override
-                  public void onEvent(InteractionEvent event) {
-                    System.out.println("收到：" + event);
-                  }
-
-                  @Override
-                  public Intent eventIntent() {
-                    return Intent.register().withInteraction().done();
-                  }
                 });
+      };
 
-        QQConnection.connect(wssUrl, chainHandler, context,
-                uuid -> WebSocketAPI.newStandaloneSession(intent, uuid, null, context),
+      try {
+        QQConnection.connect(context, handlerSupplier,
+                uuid -> WebSocketAPI.newStandaloneSession(Intent.register().withAll().done(), uuid, null, context),
                 uuid -> {
-                  // do sth
+                  // TODO embed
                 });
       } catch (Exception e) {
         e.printStackTrace();
-      } finally {
-        System.out.println("Connection closed, try to re-generate token and reconnect ...");
       }
+      // If you are running in main, you need to block the main thread
+      System.in.read();
     }
   
   }
