@@ -128,15 +128,11 @@ public class TestMain {
                     });
         };
 
-        try {
-            QQConnection.connect(context, handlerSupplier,
-                    uuid -> WebSocketAPI.newStandaloneSession(Intent.register().withAll().done(), uuid, null, context),
-                    uuid -> {
-                        // TODO embed
-                    });
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        QQConnection.connect(context, handlerSupplier,
+                uuid -> WebSocketAPI.newStandaloneSession(Intent.register().withAll().done(), uuid, null, context),
+                uuid -> {
+                    // TODO embed
+                });
         // If you are running in main, you need to block the main thread
         System.in.read();
     }
