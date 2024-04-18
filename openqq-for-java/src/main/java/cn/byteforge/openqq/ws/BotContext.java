@@ -134,8 +134,8 @@ public class BotContext {
      * @param executor 托管 wss 连接的线程池 (core >= 2)
      * */
     public static BotContext create(String appId, String clientSecret, ExecutorService executor) {
-        AccessToken token = OpenAPI.getAppAccessToken(appId, clientSecret);
-        Certificate certificate = new Certificate(appId, clientSecret, token);
+        // initialize with empty token
+        Certificate certificate = new Certificate(appId, clientSecret, null);
         return new BotContext(executor, certificate);
     }
 

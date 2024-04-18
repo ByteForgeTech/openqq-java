@@ -2,10 +2,11 @@ package cn.byteforge.openqq.ws;
 
 import cn.byteforge.openqq.QQHelper;
 import cn.byteforge.openqq.http.OpenAPI;
+import cn.byteforge.openqq.http.entity.AccessToken;
 import cn.byteforge.openqq.http.entity.RecommendShard;
+import cn.byteforge.openqq.model.Certificate;
 import cn.byteforge.openqq.ws.entity.Session;
 import cn.byteforge.openqq.ws.handler.ChainHandler;
-import cn.hutool.core.lang.Assert;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
@@ -31,11 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.UUID;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -81,10 +78,14 @@ public class QQConnection {
             @Nullable Consumer<UUID> callback
     ) {
         context.getExecutor().submit(() -> {
+            // refresh token first
+            Certificate cert = context.getCertificate();
+            AccessToken token = OpenAPI.getAppAccessToken(cert.getAppId(), cert.getClientSecret());
+            cert.updateToken(token);
+
             UUID uuid = _uuid != null ? _uuid : UUID.randomUUID();
             ChainHandler chainHandler = getChainHandler(handlerSupplier, uuid, context);
             EventChannelHandler eventHandler = new EventChannelHandler(chainHandler);
-            ScheduledExecutorService tokenService = Executors.newScheduledThreadPool(1);
             EventLoopGroup group = new NioEventLoopGroup();
             try {
                 Bootstrap bootstrap = new Bootstrap()
@@ -107,7 +108,7 @@ public class QQConnection {
                             }
                         });
 
-                RecommendShard shard = OpenAPI.getRecommendShardWssUrls(context.getCertificate());
+                RecommendShard shard = OpenAPI.getRecommendShardWssUrls(cert);
                 URI uri = new URI(shard.getUrl());
                 WebSocketClientHandshaker handshake = WebSocketClientHandshakerFactory
                         .newHandshaker(uri, WebSocketVersion.V13, null, true, null);
@@ -135,11 +136,8 @@ public class QQConnection {
                 context.initSession(uuid, sessionFunction);
 
                 // auto refresh token thread
-                tokenService.schedule(
-                        QQHelper.refreshTokenRunnable(uuid, context),
-                        Integer.parseInt(context.getCertificate().getAccessToken().getExpiresIn()),
-                        TimeUnit.SECONDS
-                );
+                QQHelper.startAutoRefreshToken(uuid, context);
+
                 if (callback != null) callback.accept(uuid);
                 channel.closeFuture().sync();
             } catch (Exception e) {
@@ -147,7 +145,6 @@ public class QQConnection {
             } finally {
                 Channel channel = CLIENT_GROUPS.find(context.getConnMap().get(uuid).getKey());
                 CLIENT_GROUPS.remove(channel);
-                tokenService.shutdownNow();
                 try {
                     group.shutdownGracefully().sync();
                 } catch (InterruptedException ignore) {}
