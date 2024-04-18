@@ -44,7 +44,7 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
   <dependency>
       <groupId>cn.byteforge.openqq</groupId>
       <artifactId>openqq-for-java</artifactId>
-      <version>0.2.2</version>
+      <version>0.2.6</version>
   </dependency>
 ```
 
@@ -79,15 +79,11 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
                 });
       };
 
-      try {
-        QQConnection.connect(context, handlerSupplier,
-                uuid -> WebSocketAPI.newStandaloneSession(Intent.register().withAll().done(), uuid, null, context),
-                uuid -> {
-                  // TODO embed
-                });
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+      QQConnection.connect(context, handlerSupplier,
+              uuid -> WebSocketAPI.newStandaloneSession(Intent.register().withAll().done(), uuid, null, context),
+              uuid -> {
+                // TODO embed
+              });
       // If you are running in main, you need to block the main thread
       System.in.read();
     }
