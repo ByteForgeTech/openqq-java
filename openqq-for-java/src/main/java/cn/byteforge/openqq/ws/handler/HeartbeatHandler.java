@@ -15,12 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class HeartbeatHandler extends ChainHandler {
 
-    private final ScheduledExecutorService executor;
-    private ScheduledFuture<?> scheduledFuture;
-
-    public HeartbeatHandler() {
-        executor = Executors.newSingleThreadScheduledExecutor();
-    }
+    private ScheduledExecutorService executor;
 
     // Event -> Event
     @Override
@@ -28,15 +23,16 @@ public class HeartbeatHandler extends ChainHandler {
         Event event = (Event) o;
         switch (event.getOpcode()) {
             case HELLO: {
-                if (scheduledFuture != null) {
-                    scheduledFuture.cancel(true);
+                if (executor != null) {
+                    executor.shutdownNow();
                     log.info("Duplicate heartbeat thread detected, is this connection reconnect ?");
                 }
+                executor = Executors.newSingleThreadScheduledExecutor();
                 // start to heartbeat
                 long interval = event.getJson().getAsJsonObject("d").get("heartbeat_interval").getAsLong();
                 // ScheduledExecutor leaves 20% of the interval to avoid errors
                 interval -= (interval / 10) * 2;
-                scheduledFuture = executor.scheduleAtFixedRate(new HeartbeatRunnable(getUuid(), getContext()), interval, interval, TimeUnit.MILLISECONDS);
+                executor.scheduleAtFixedRate(new HeartbeatRunnable(getUuid(), getContext()), interval, interval, TimeUnit.MILLISECONDS);
                 log.debug("Heartbeat thread start with interval {}ms", interval);
                 return null;
             }
