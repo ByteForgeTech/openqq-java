@@ -44,7 +44,7 @@ openqq-java 是基于官方qq机器人协议的 java sdk 实现。本实现将�
   <dependency>
       <groupId>cn.byteforge.openqq</groupId>
       <artifactId>openqq-for-java</artifactId>
-      <version>0.2.6</version>
+      <version>0.2.7</version>
   </dependency>
 ```
 
