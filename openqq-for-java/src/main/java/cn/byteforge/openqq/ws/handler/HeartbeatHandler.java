@@ -48,4 +48,9 @@ public class HeartbeatHandler extends ChainHandler {
         return event;
     }
 
+    @Override
+    public void onClose() {
+        executor.shutdownNow();
+    }
+
 }

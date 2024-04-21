@@ -70,6 +70,12 @@ public abstract class ChainHandler {
         this.context = context;
     }
 
+
+    /**
+     * ChainHandler 关闭时调用
+     * */
+    public void onClose() {}
+
     /**
      * 当前处理实现
      * */

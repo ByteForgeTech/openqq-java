@@ -143,6 +143,15 @@ public class QQConnection {
             } catch (Exception e) {
                 log.error("Exception occurred in wss connection", e);
             } finally {
+                ChainHandler next = chainHandler;
+                while (next != null) {
+                    try {
+                        next.onClose();
+                    } catch (Exception e) {
+                        log.error("Error occurred when close handler: {}", next.getClass().getName(), e);
+                    }
+                    next = next.next();
+                }
                 Channel channel = CLIENT_GROUPS.find(context.getConnMap().get(uuid).getKey());
                 CLIENT_GROUPS.remove(channel);
                 try {
@@ -153,6 +162,7 @@ public class QQConnection {
         });
     }
 
+    @NotNull
     private static ChainHandler getChainHandler(@Nullable Supplier<ChainHandler> handlerSupplier, UUID uuid, BotContext context) {
         // 初始化
         if (handlerSupplier != null) {
